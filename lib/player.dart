@@ -3,8 +3,6 @@ import 'package:audioplayers/audioplayers.dart';
 import './home.dart';
 import 'models/Track.dart';
 
-AudioPlayer audioPlayer = AudioPlayer();
-
 class Player extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -13,15 +11,20 @@ class Player extends StatefulWidget {
 }
 
 class _PlayerState extends State<Player> {
-  bool isPlaying = true;
-  bool isVolume = true;
+  late AudioPlayer audioPlayer;
+  bool isPlaying = false;
+  bool isPause = false;
   bool isLoop = false;
+  double volume = 1.0;
+  bool showSetVolume = false;
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
 
   @override
   void initState() {
     super.initState();
+
+    audioPlayer = AudioPlayer();
     audioPlayer.onPositionChanged.listen((event) {
      setState(() {
        position = event;
@@ -29,16 +32,28 @@ class _PlayerState extends State<Player> {
     });
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    audioPlayer.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     Track track = ModalRoute.of(context)!.settings.arguments as Track;
     Source source = UrlSource(track.preview_url);
-    if(isPlaying ){
+    audioPlayer.setVolume(volume);
+
+    if(!isPlaying){
       audioPlayer.play(source);
+      isPlaying = true;
+    }
+
+    if(isPause){
+      audioPlayer.pause();
     }
     else{
-      audioPlayer.pause();
+      audioPlayer.resume();
     }
 
     return SafeArea(
@@ -100,10 +115,10 @@ class _PlayerState extends State<Player> {
                   child: IconButton(
                       onPressed: () {
                         setState(() {
-                          isPlaying = !isPlaying;
+                          isPause = !isPause;
                         });
                       },
-                      icon: _setIconPlay())),
+                      icon: _setIconPause())),
               Expanded(
                   child: IconButton(
                       onPressed: () {},
@@ -115,12 +130,26 @@ class _PlayerState extends State<Player> {
                   child: IconButton(
                       onPressed: () {
                         setState(() {
-                          isVolume = !isVolume;
+                          showSetVolume = !showSetVolume;
                         });
                       },
-                      icon: _setIconVolume()))
+                      icon: Icon(Icons.volume_up)))
             ],
-          )
+          ),
+          if(showSetVolume)
+            SizedBox(
+              width: 200,
+              child: Slider(
+                value: volume,
+                onChanged: (value) {
+                  setState(() {
+                    volume = value;
+                  });
+                },
+                activeColor: Colors.blue,  // Adjust colors as desired
+                inactiveColor: Colors.grey,
+              ),
+            )
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -171,33 +200,20 @@ class _PlayerState extends State<Player> {
     ));
   }
 
-  Icon _setIconPlay() {
-    if (isPlaying) {
+  Icon _setIconPause() {
+    if (isPause) {
       return Icon(
-        Icons.pause,
+        Icons.play_arrow,
         size: 40,
       );
     } else {
       return Icon(
-        Icons.play_arrow,
+        Icons.pause,
         size: 40,
       );
     }
   }
 
-  Icon _setIconVolume() {
-    if (isVolume == true) {
-      return Icon(
-        Icons.volume_up,
-        size: 25,
-      );
-    } else {
-      return Icon(
-        Icons.volume_off,
-        size: 25,
-      );
-    }
-  }
 
   Icon _setIconLoop() {
     if (isLoop) {
