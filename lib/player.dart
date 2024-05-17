@@ -26,9 +26,14 @@ class _PlayerState extends State<Player> {
 
     audioPlayer = AudioPlayer();
     audioPlayer.onPositionChanged.listen((event) {
-     setState(() {
-       position = event;
-     });
+     if(mounted){
+       setState(() {
+         position = event;
+       });
+     }
+    });
+    audioPlayer.onDurationChanged.listen((event) {
+      duration=event;
     });
   }
 
@@ -88,10 +93,13 @@ class _PlayerState extends State<Player> {
           ),
           Slider(
             min: 0,
-            max: 100,
+            max: duration == Duration.zero ? 0.0 : duration.inSeconds.toDouble(),
             value: position.inSeconds.toDouble(),
             onChanged: (value) {
-              setState(() {});
+              setState(() {
+                position = Duration(seconds: value.toInt());
+              });
+              audioPlayer.seek(Duration(seconds: value.toInt()));
             },
           ),
           Row(
@@ -151,51 +159,6 @@ class _PlayerState extends State<Player> {
               ),
             )
         ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            label: 'Favorite',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.delete_outline_outlined),
-            label: 'Cart',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              print("Favorite item tapped!");
-              break;
-            case 1:
-              print('Search item tapped!');
-              break;
-            case 2:
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => Home()));
-              break;
-            case 3:
-              print('Cart item tapped!');
-              break;
-            case 4:
-              print('Profile item tapped!');
-              break;
-          }
-        },
       ),
     ));
   }
