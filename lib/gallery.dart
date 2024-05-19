@@ -158,11 +158,15 @@ class GalleryState extends State<Gallery> {
                           for (int i = 0; i < data.length; i++)
                             GestureDetector(
                               onTap: () {
+                                Map<String, dynamic> song = {
+                                  "listTrack": data,
+                                  "idTrack": i,
+                                };
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) => Player(),
-                                        settings: RouteSettings(arguments: data[i])));
+                                        settings: RouteSettings(arguments:song)));
                               },
                               child: Column(
                                 children: [

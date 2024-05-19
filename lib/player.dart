@@ -1,9 +1,15 @@
+import 'dart:isolate';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import './home.dart';
 import 'models/Track.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Player extends StatefulWidget {
+  const Player({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _PlayerState();
@@ -11,95 +17,163 @@ class Player extends StatefulWidget {
 }
 
 class _PlayerState extends State<Player> {
-  late AudioPlayer audioPlayer;
+  final AudioPlayer audioPlayer = AudioPlayer();
   bool isPlaying = false;
-  bool isPause = false;
   bool isLoop = false;
   double volume = 1.0;
   bool showSetVolume = false;
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
+  late int idTrack,id = -1;
+  late List<Track> listTrack;
+  ReceivePort _port = ReceivePort();
+
+  Future _downLoadFile(String url,String name) async{
+    final status =await Permission.storage.request();
+    if(status.isGranted){
+      final baseStorage = await getExternalStorageDirectory();
+      print(baseStorage!.path);
+      final taskId = await FlutterDownloader.enqueue(
+        url: url,
+        savedDir: baseStorage!.path,
+        fileName: '$name.mp3',
+        showNotification: true,
+        openFileFromNotification: true,
+      );
+    }
+  }
 
   @override
   void initState() {
     super.initState();
 
-    audioPlayer = AudioPlayer();
-    audioPlayer.onPositionChanged.listen((event) {
-     if(mounted){
-       setState(() {
-         position = event;
-       });
-     }
+    audioPlayer.setVolume(volume);
+
+    audioPlayer.onPlayerStateChanged.listen((event) {
+      if (mounted) {
+        setState(() {
+          isPlaying = event == PlayerState.playing;
+        });
+      }
     });
     audioPlayer.onDurationChanged.listen((event) {
-      duration=event;
+      if (mounted) {
+        setState(() {
+          duration = event;
+        });
+      }
     });
+
+    audioPlayer.onPositionChanged.listen((event) {
+      if (mounted) {
+        setState(() {
+          position = event;
+        });
+      }
+    });
+    audioPlayer.onPlayerComplete.listen((event) {
+      if(mounted){
+        setState(() {
+          position = Duration.zero;
+          id++;
+        });
+      }
+    });
+    IsolateNameServer.registerPortWithName(_port.sendPort, 'downloader_send_port');
+    _port.listen((dynamic data) {
+      String id = data[0] ;
+      int status = data[1];
+      int progress = data[2];
+      setState((){ });
+    });
+
+    FlutterDownloader.registerCallback(downloadCallback);
   }
 
   @override
   void dispose() {
     super.dispose();
+    IsolateNameServer.removePortNameMapping('downloader_send_port');
+
     audioPlayer.dispose();
+  }
+
+  @pragma('vm:entry-point')
+  static void downloadCallback(String id, int status, int progress) {
+    final SendPort? send = IsolateNameServer.lookupPortByName('downloader_send_port');
+    send!.send([id, status, progress]);
   }
 
   @override
   Widget build(BuildContext context) {
-    Track track = ModalRoute.of(context)!.settings.arguments as Track;
-    Source source = UrlSource(track.preview_url);
-    audioPlayer.setVolume(volume);
-
-    if(!isPlaying){
-      audioPlayer.play(source);
-      isPlaying = true;
-    }
-
-    if(isPause){
-      audioPlayer.pause();
+    Map<String,dynamic> song= ModalRoute.of(context)!.settings.arguments
+    as Map<String,dynamic>;
+    listTrack = song["listTrack"] as List<Track>;
+    idTrack = song["idTrack"] as int;
+    if(id<=idTrack){
+      id=idTrack;
     }
     else{
-      audioPlayer.resume();
+      idTrack=id;
     }
+    Track track = listTrack[idTrack];
+    Source source = UrlSource(track.preview_url);
 
     return SafeArea(
         child: Scaffold(
       body: Column(
         children: [
-          Image.asset(
-            "assets/images/profile.png",
-            width: double.infinity,
-            height: 300,
-            fit: BoxFit.fill,
-          ),
-          const Text(
-            "Alone in the Abyss",
-            style: TextStyle(fontSize: 24, color: Colors.amber),
-          ),
-          Text("Youlakou"),
           Container(
-            margin: EdgeInsets.only(left: 300),
-            child: const Icon(
-              Icons.ios_share,
-              color: Colors.yellow,
+              margin: EdgeInsets.only(top: 25),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.network(
+                  track.image,
+                  height: 250,
+                  width: 250,
+                  fit: BoxFit.contain,
+                ),
+              )),
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              track.name,
+              style: const TextStyle(fontSize: 24, color: Colors.amber),
             ),
           ),
           Row(
             children: [
               Container(
-                  margin: EdgeInsets.only(left: 20),
-                  child: const Text("Dynamic warmup |")),
-              Container(margin: EdgeInsets.only(left: 160), child: Text(" min"))
+                padding: const EdgeInsets.only(left: 40),
+                child: IconButton(
+                  icon: const Icon(Icons.download),
+                  onPressed: ()  {
+                    _downLoadFile(track.preview_url, track.name);
+                  },
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(left: 90),
+                child: const Icon(
+                  Icons.ios_share,
+                  color: Colors.yellow,
+                ),
+              ),
+              Container(
+                  margin: const EdgeInsets.only(left: 70),
+                  child: Text("${duration.inSeconds - position.inSeconds}s"))
             ],
           ),
           Slider(
             min: 0,
-            max: duration == Duration.zero ? 0.0 : duration.inSeconds.toDouble(),
+            max:
+                duration == Duration.zero ? 0.0 : duration.inSeconds.toDouble(),
             value: position.inSeconds.toDouble(),
-            onChanged: (value) {
-              setState(() {
-                position = Duration(seconds: value.toInt());
-              });
-              audioPlayer.seek(Duration(seconds: value.toInt()));
+            onChanged: (value) async {
+              final position = Duration(seconds: value.toInt());
+              await audioPlayer.seek(position);
+
+              await audioPlayer.resume();
             },
           ),
           Row(
@@ -110,27 +184,40 @@ class _PlayerState extends State<Player> {
                         setState(() {
                           isLoop = !isLoop;
                         });
+                        if (isLoop) {
+                          audioPlayer.setReleaseMode(ReleaseMode.loop);
+                        } else {
+                          audioPlayer.setReleaseMode(ReleaseMode.release);
+                        }
                       },
                       icon: _setIconLoop())),
               Expanded(
                   child: IconButton(
                       onPressed: () {},
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.skip_previous,
                         size: 30,
                       ))),
               Expanded(
                   child: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          isPause = !isPause;
-                        });
+                      onPressed: () async {
+                        if (isPlaying) {
+                          await audioPlayer.pause();
+                        } else {
+                          audioPlayer.play(source);
+                        }
                       },
-                      icon: _setIconPause())),
+                      icon: _setIconPlaying())),
               Expanded(
                   child: IconButton(
-                      onPressed: () {},
-                      icon: Icon(
+                      onPressed: () {
+                        audioPlayer.release();
+                        setState(() {
+                          position = Duration.zero;
+                          id++;
+                        });
+                      },
+                      icon: const Icon(
                         Icons.skip_next,
                         size: 30,
                       ))),
@@ -141,10 +228,10 @@ class _PlayerState extends State<Player> {
                           showSetVolume = !showSetVolume;
                         });
                       },
-                      icon: Icon(Icons.volume_up)))
+                      icon: const Icon(Icons.volume_up)))
             ],
           ),
-          if(showSetVolume)
+          if (showSetVolume)
             SizedBox(
               width: 200,
               child: Slider(
@@ -154,7 +241,7 @@ class _PlayerState extends State<Player> {
                     volume = value;
                   });
                 },
-                activeColor: Colors.blue,  // Adjust colors as desired
+                activeColor: Colors.blue, // Adjust colors as desired
                 inactiveColor: Colors.grey,
               ),
             )
@@ -163,26 +250,25 @@ class _PlayerState extends State<Player> {
     ));
   }
 
-  Icon _setIconPause() {
-    if (isPause) {
-      return Icon(
-        Icons.play_arrow,
+  Icon _setIconPlaying() {
+    if (isPlaying) {
+      return const Icon(
+        Icons.pause,
         size: 40,
       );
     } else {
-      return Icon(
-        Icons.pause,
+      return const Icon(
+        Icons.play_arrow,
         size: 40,
       );
     }
   }
 
-
   Icon _setIconLoop() {
     if (isLoop) {
-      return Icon(Icons.repeat_one_rounded);
+      return const Icon(Icons.repeat_one_rounded);
     } else {
-      return Icon(Icons.repeat);
+      return const Icon(Icons.repeat);
     }
   }
 }
