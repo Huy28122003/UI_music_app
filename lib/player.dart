@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -18,21 +19,33 @@ class Player extends StatefulWidget {
 
 class _PlayerState extends State<Player> {
   final AudioPlayer audioPlayer = AudioPlayer();
-  bool isPlaying = false;
+  bool isPlaying = true;
   bool isLoop = false;
   double volume = 1.0;
   bool showSetVolume = false;
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
-  late int idTrack,id = -1;
+  late int idTrack, id = -1;
   late List<Track> listTrack;
-  ReceivePort _port = ReceivePort();
+  final ReceivePort _port = ReceivePort();
 
-  Future _downLoadFile(String url,String name) async{
-    final status =await Permission.storage.request();
-    if(status.isGranted){
+  Future<bool> findTrackInLocal(String trackName) async {
+    Directory directory = Directory(
+        '/storage/emulated/0/Android/data/com.example.ui_music_app/files');
+    List<FileSystemEntity> files = await directory.list().toList();
+    List<File> mp3Files = files
+        .whereType<File>()
+        .where((file) => file.path.endsWith('.mp3'))
+        .toList();
+    List<File> matchingFiles =
+        mp3Files.where((file) => file.path.contains(trackName)).toList();
+    return matchingFiles.isNotEmpty;
+  }
+
+  Future _downLoadFile(String url, String name) async {
+    final status = await Permission.storage.request();
+    if (status.isGranted) {
       final baseStorage = await getExternalStorageDirectory();
-      print(baseStorage!.path);
       final taskId = await FlutterDownloader.enqueue(
         url: url,
         savedDir: baseStorage!.path,
@@ -40,6 +53,18 @@ class _PlayerState extends State<Player> {
         showNotification: true,
         openFileFromNotification: true,
       );
+    }
+  }
+
+  Future<void> play(String trackName, String url) async {
+    bool isTrackDownloaded = await findTrackInLocal(trackName);
+    if (isTrackDownloaded) {
+      print("yesyesyesyesyesyesyesyesyesyesyesyes");
+      audioPlayer.play(DeviceFileSource(
+      "storage/emulated/0/Android/data/com.example.ui_music_app/files/$trackName"));
+    } else {
+      audioPlayer.play(UrlSource(url));
+      print("nononononononononononononononononono");
     }
   }
 
@@ -53,6 +78,7 @@ class _PlayerState extends State<Player> {
       if (mounted) {
         setState(() {
           isPlaying = event == PlayerState.playing;
+          print(isPlaying);
         });
       }
     });
@@ -72,19 +98,21 @@ class _PlayerState extends State<Player> {
       }
     });
     audioPlayer.onPlayerComplete.listen((event) {
-      if(mounted){
+      if (mounted) {
         setState(() {
           position = Duration.zero;
+          isCalled = false;
           id++;
         });
       }
     });
-    IsolateNameServer.registerPortWithName(_port.sendPort, 'downloader_send_port');
+    IsolateNameServer.registerPortWithName(
+        _port.sendPort, 'downloader_send_port');
     _port.listen((dynamic data) {
-      String id = data[0] ;
+      String id = data[0];
       int status = data[1];
       int progress = data[2];
-      setState((){ });
+      setState(() {});
     });
 
     FlutterDownloader.registerCallback(downloadCallback);
@@ -94,37 +122,49 @@ class _PlayerState extends State<Player> {
   void dispose() {
     super.dispose();
     IsolateNameServer.removePortNameMapping('downloader_send_port');
-
     audioPlayer.dispose();
   }
 
   @pragma('vm:entry-point')
   static void downloadCallback(String id, int status, int progress) {
-    final SendPort? send = IsolateNameServer.lookupPortByName('downloader_send_port');
+    final SendPort? send =
+        IsolateNameServer.lookupPortByName('downloader_send_port');
     send!.send([id, status, progress]);
   }
 
+  bool isCalled = false;
+
+
   @override
   Widget build(BuildContext context) {
-    Map<String,dynamic> song= ModalRoute.of(context)!.settings.arguments
-    as Map<String,dynamic>;
+    Map<String, dynamic> song =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     listTrack = song["listTrack"] as List<Track>;
     idTrack = song["idTrack"] as int;
-    if(id<=idTrack){
-      id=idTrack;
-    }
-    else{
-      idTrack=id;
+    audioPlayer.setVolume(volume);
+    if (id <= idTrack) {
+      id = idTrack;
+    } else {
+      idTrack = id;
     }
     Track track = listTrack[idTrack];
-    Source source = UrlSource(track.preview_url);
+    Source source = UrlSource(
+        'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3');
+    if (!isCalled) {
+      play("${track.name}.mp3", track.preview_url);
+      // audioPlayer.play(source);
+      // audioPlayer.play(DeviceFileSource(
+      //     "storage/emulated/0/Android/data/com.example.ui_music_app/files/No1.mp3.mp3"));
+
+      isCalled = true;
+    }
 
     return SafeArea(
         child: Scaffold(
       body: Column(
         children: [
           Container(
-              margin: EdgeInsets.only(top: 25),
+              margin: const EdgeInsets.only(top: 25),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(15),
                 child: Image.network(
@@ -147,7 +187,7 @@ class _PlayerState extends State<Player> {
                 padding: const EdgeInsets.only(left: 40),
                 child: IconButton(
                   icon: const Icon(Icons.download),
-                  onPressed: ()  {
+                  onPressed: () {
                     _downLoadFile(track.preview_url, track.name);
                   },
                 ),
@@ -176,6 +216,7 @@ class _PlayerState extends State<Player> {
               await audioPlayer.resume();
             },
           ),
+
           Row(
             children: [
               Expanded(
@@ -204,7 +245,7 @@ class _PlayerState extends State<Player> {
                         if (isPlaying) {
                           await audioPlayer.pause();
                         } else {
-                          audioPlayer.play(source);
+                          await audioPlayer.resume();
                         }
                       },
                       icon: _setIconPlaying())),

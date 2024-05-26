@@ -99,7 +99,7 @@ class GalleryState extends State<Gallery> {
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
-        title: Text("Gallery"),
+        title: const Text("Gallery"),
       ),
       body: Column(
         children: [
@@ -221,12 +221,12 @@ class GalleryState extends State<Gallery> {
                           children: [
                             FadeInImage.assetNetwork(
                               placeholder: 'assets/images/img8.png',
-                              image: "${data[i].image}",
+                              image: data[i].image,
                               width: 100,
                             ),
                             Expanded(child:
                             Text(
-                              "${data[i].name}",
+                              data[i].name,
                               softWrap: true,
                             ),)
                           ],
