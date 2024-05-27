@@ -151,10 +151,10 @@ class _PlayerState extends State<Player> {
     Source source = UrlSource(
         'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3');
     if (!isCalled) {
-      play("${track.name}.mp3", track.preview_url);
+      // play("${track.name}.mp3", track.preview_url);
       // audioPlayer.play(source);
-      // audioPlayer.play(DeviceFileSource(
-      //     "storage/emulated/0/Android/data/com.example.ui_music_app/files/No1.mp3.mp3"));
+      audioPlayer.play(DeviceFileSource(
+          "storage/emulated/0/Android/data/com.example.ui_music_app/files/No1.mp3"));
 
       isCalled = true;
     }

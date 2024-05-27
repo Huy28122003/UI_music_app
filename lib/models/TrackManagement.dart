@@ -1,13 +1,13 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 
 class TrackManangement {
   final AudioPlayer _audioPlayer = AudioPlayer();
   late int _currentTrack;
-
   bool _isPlaying = true;
   bool _isLoop = false;
-  late Duration positon;
-  late Duration total;
+  final ValueNotifier<Duration> _positionNotifier = ValueNotifier(Duration.zero);
+
 
   List _tracks = [
     'https://p.scdn.co/mp3-preview/f5d7490c9bc1200f19d924d83d4e25c6c285f236?cid=f6a40776580943a7bc5173125a1e8832',
@@ -24,11 +24,15 @@ class TrackManangement {
   }
 
   void playOrpause() {
-    Source source = UrlSource(_tracks[_currentTrack]);
-    if (_isPlaying) {
-      _audioPlayer.play(source);
+    if (_currentTrack >= 0 && _currentTrack < _tracks.length) {
+      Source source = UrlSource(_tracks[_currentTrack]);
+      if (_isPlaying) {
+        _audioPlayer.play(source);
+      } else {
+        _audioPlayer.pause();
+      }
     } else {
-      _audioPlayer.pause();
+      print("Đã phát hết danh sách");
     }
   }
 
@@ -56,4 +60,13 @@ class TrackManangement {
   int get currentTrack => _currentTrack;
 
   bool get isLoop => _isLoop;
+
+  ValueNotifier<Duration> get positionNotifier => _positionNotifier;
+
+  void setPosition() {
+    _audioPlayer.onPositionChanged.listen((newPosition) {
+      _positionNotifier.value = newPosition;
+    });
+  }
+
 }
