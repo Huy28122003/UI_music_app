@@ -20,7 +20,7 @@ class _Test2State extends State<Test2> {
 
     if (manangement.isLoop == false) {
       manangement.listenPlayComplete();
-    }
+  }
     manangement.setPosition();
     return SafeArea(
         child: Scaffold(

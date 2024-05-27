@@ -152,7 +152,11 @@ class _PlayerState extends State<Player> {
         'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3');
     if (!isCalled) {
       // play("${track.name}.mp3", track.preview_url);
+
+      // Phát bài nhạc với thời gian lời từ url
       // audioPlayer.play(source);
+
+      // Phát bài nhạc với thời gian lơớn đã tải về device
       audioPlayer.play(DeviceFileSource(
           "storage/emulated/0/Android/data/com.example.ui_music_app/files/No1.mp3"));
 
