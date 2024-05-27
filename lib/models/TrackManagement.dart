@@ -15,6 +15,34 @@ class TrackManangement {
     'https://p.scdn.co/mp3-preview/aa214f2af8138024db3a720f8f0f636abea9f36d?cid=f6a40776580943a7bc5173125a1e8832'
   ];
 
+
+
+  set currentTrack(int value) {
+    _currentTrack = value;
+  }
+
+  set isPlaying(bool value) {
+    _isPlaying = value;
+  }
+
+  set isLoop(bool value) {
+    _isLoop = value;
+  }
+
+  bool get isPlaying => _isPlaying;
+
+  int get currentTrack => _currentTrack;
+
+  bool get isLoop => _isLoop;
+
+  ValueNotifier<Duration> get positionNotifier => _positionNotifier;
+
+  void setPosition() {
+    _audioPlayer.onPositionChanged.listen((newPosition) {
+      _positionNotifier.value = newPosition;
+    });
+  }
+
   void setPlayMode() {
     if (_isLoop) {
       _audioPlayer.setReleaseMode(ReleaseMode.loop);
@@ -43,30 +71,8 @@ class TrackManangement {
     });
   }
 
-  set currentTrack(int value) {
-    _currentTrack = value;
-  }
-
-  set isPlaying(bool value) {
-    _isPlaying = value;
-  }
-
-  set isLoop(bool value) {
-    _isLoop = value;
-  }
-
-  bool get isPlaying => _isPlaying;
-
-  int get currentTrack => _currentTrack;
-
-  bool get isLoop => _isLoop;
-
-  ValueNotifier<Duration> get positionNotifier => _positionNotifier;
-
-  void setPosition() {
-    _audioPlayer.onPositionChanged.listen((newPosition) {
-      _positionNotifier.value = newPosition;
-    });
+  void seek(Duration position){
+    _audioPlayer.seek(position);
   }
 
 }

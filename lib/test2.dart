@@ -20,7 +20,7 @@ class _Test2State extends State<Test2> {
 
     if (manangement.isLoop == false) {
       manangement.listenPlayComplete();
-  }
+    }
     manangement.setPosition();
     return SafeArea(
         child: Scaffold(
@@ -53,7 +53,8 @@ class _Test2State extends State<Test2> {
               return Slider(
                 value: position.inSeconds.toDouble(),
                 onChanged: (newValue) {
-                  print("ok");
+                  Duration newPosition = Duration(seconds: newValue.toInt());
+                  manangement.seek(newPosition);
                 },
                 min: 0,
                 max:100,
