@@ -24,45 +24,45 @@ class _Test2State extends State<Test2> {
     manangement.setPosition();
     return SafeArea(
         child: Scaffold(
-      body: Column(
-        children: [
-          IconButton(
-            icon: manangement.isPlaying
-                ? Icon(Icons.pause)
-                : Icon(Icons.play_arrow),
-            onPressed: () {
-              setState(() {
-                manangement.isPlaying = !manangement.isPlaying;
-              });
-            },
-          ),
-          IconButton(
-            icon: manangement.isLoop
-                ? Icon(Icons.repeat_one_rounded)
-                : Icon(Icons.repeat),
-            onPressed: () {
-              setState(() {
-                manangement.isLoop = !manangement.isLoop;
-                manangement.setPlayMode();
-              });
-            },
-          ),
-          ValueListenableBuilder<Duration>(
-            valueListenable: manangement.positionNotifier,
-            builder: (context, position, child) {
-              return Slider(
-                value: position.inSeconds.toDouble(),
-                onChanged: (newValue) {
-                  Duration newPosition = Duration(seconds: newValue.toInt());
-                  manangement.seek(newPosition);
+          body: Column(
+            children: [
+              IconButton(
+                icon: manangement.isPlaying
+                    ? Icon(Icons.pause)
+                    : Icon(Icons.play_arrow),
+                onPressed: () {
+                  setState(() {
+                    manangement.isPlaying = !manangement.isPlaying;
+                  });
                 },
-                min: 0,
-                max:100,
-              );
-            },
+              ),
+              IconButton(
+                icon: manangement.isLoop
+                    ? Icon(Icons.repeat_one_rounded)
+                    : Icon(Icons.repeat),
+                onPressed: () {
+                  setState(() {
+                    manangement.isLoop = !manangement.isLoop;
+                    manangement.setPlayMode();
+                  });
+                },
+              ),
+              ValueListenableBuilder<Duration>(
+                valueListenable: manangement.positionNotifier,
+                builder: (context, position, child) {
+                  return Slider(
+                    value: position.inSeconds.toDouble(),
+                    onChanged: (newValue) {
+                      Duration newPosition = Duration(seconds: newValue.toInt());
+                      manangement.seek(newPosition);
+                    },
+                    min: 0,
+                    max:100,
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-    ));
+        ));
   }
 }

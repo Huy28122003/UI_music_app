@@ -1,9 +1,13 @@
 import 'dart:convert';
+import 'package:ui_music_app/models/TrackManager.dart';
+
 import './models/Track.dart';
 import './home.dart';
 import 'package:flutter/material.dart';
 import './player.dart';
 import 'package:http/http.dart' as http;
+
+TrackManager manager = TrackManager();
 
 Future<List<Track>> getPlaylistTracks() async {
   String id = '37i9dQZF1DX4Wsb4d7NKfP';
@@ -83,15 +87,14 @@ class Gallery extends StatefulWidget {
 }
 
 class GalleryState extends State<Gallery> {
-  late final Future<List<Track>> listTrackFuture;
-
-  late final Future<List<Track>> listTrackRecommendationFuture;
+  // late final Future<List<Track>> listTrackFuture;
+  // late final Future<List<Track>> listTrackRecommendationFuture;
 
   @override
   void initState() {
     super.initState();
-    listTrackFuture = getPlaylistTracks();
-    listTrackRecommendationFuture = getTrackRecommendations();
+    // listTrackFuture = getPlaylistTracks();
+    // listTrackRecommendationFuture = getTrackRecommendations();
   }
 
   @override
@@ -146,7 +149,7 @@ class GalleryState extends State<Gallery> {
             )
           ]),
           FutureBuilder(
-              future: listTrackFuture,
+              future: manager.dataFuture,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   final List<Track> data = snapshot.data!;
@@ -158,15 +161,11 @@ class GalleryState extends State<Gallery> {
                           for (int i = 0; i < data.length; i++)
                             GestureDetector(
                               onTap: () {
-                                Map<String, dynamic> song = {
-                                  "listTrack": data,
-                                  "idTrack": i,
-                                };
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) => Player(),
-                                        settings: RouteSettings(arguments:song)));
+                                        settings: RouteSettings(arguments:i)));
                               },
                               child: Column(
                                 children: [
@@ -208,37 +207,37 @@ class GalleryState extends State<Gallery> {
               ),
             )
           ]),
-          FutureBuilder(
-              future: listTrackRecommendationFuture,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final List<Track> data = snapshot.data!;
-                  return Expanded(
-                      child: ListView(
-                    children: [
-                      for (int i = 0; i < data.length; i++)
-                        Row(
-                          children: [
-                            FadeInImage.assetNetwork(
-                              placeholder: 'assets/images/img8.png',
-                              image: data[i].image,
-                              width: 100,
-                            ),
-                            Expanded(child:
-                            Text(
-                              data[i].name,
-                              softWrap: true,
-                            ),)
-                          ],
-                        ),
-                    ],
-                  ));
-                } else if (snapshot.hasError) {
-                  return Text('$snapshot.error');
-                } else {
-                  return const CircularProgressIndicator();
-                }
-              })
+          // FutureBuilder(
+          //     future: listTrackRecommendationFuture,
+          //     builder: (context, snapshot) {
+          //       if (snapshot.hasData) {
+          //         final List<Track> data = snapshot.data!;
+          //         return Expanded(
+          //             child: ListView(
+          //           children: [
+          //             for (int i = 0; i < data.length; i++)
+          //               Row(
+          //                 children: [
+          //                   FadeInImage.assetNetwork(
+          //                     placeholder: 'assets/images/img8.png',
+          //                     image: data[i].image,
+          //                     width: 100,
+          //                   ),
+          //                   Expanded(child:
+          //                   Text(
+          //                     data[i].name,
+          //                     softWrap: true,
+          //                   ),)
+          //                 ],
+          //               ),
+          //           ],
+          //         ));
+          //       } else if (snapshot.hasError) {
+          //         return Text('$snapshot.error');
+          //       } else {
+          //         return const CircularProgressIndicator();
+          //       }
+          //     })
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
