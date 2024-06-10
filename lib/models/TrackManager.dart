@@ -9,11 +9,14 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:ui_music_app/screens/gallery.dart';
 import 'Track.dart';
 
 class TrackManager {
   final AudioPlayer _audioPlayer = AudioPlayer();
-  late final Future<List<Track>> _dataFuture;
+  late final Future<List<Track>> _dataRecommendTrack;
+  late Future<List<Track>> _dataLocal;
+  late final Future<List<Track>> _dataPlaylists;
   late int _currentTrack;
   bool _isPlaying = true;
   bool _isLoop = false;
@@ -22,9 +25,49 @@ class TrackManager {
       ValueNotifier(Duration.zero);
   Duration _duration = Duration.zero;
   final ValueNotifier<bool> _isLoading = ValueNotifier(false);
-  final ValueNotifier<bool> _isCompleted = ValueNotifier(false);
+  List<Track> _tracks = [];
+  List<Track> _download = [];
+  List<Track> _playlists = [];
+  late String _localAudio;
+  bool _isSlected = false;
 
-  Future<List<Track>> getPlaylist() async {
+  Future<List<Track>> getPlaylistTracks() async {
+    String id = '37i9dQZF1DX4Wsb4d7NKfP';
+    String offset = '0';
+    String limit = '100';
+    List<Track> listTrack = [];
+    final response = await http.get(
+        Uri.parse(
+            "https://spotify23.p.rapidapi.com/playlist_tracks/?id=$id&offset=$offset&limit=$limit"),
+        headers: {
+          'X-RapidAPI-Key': 'efa54cf780msh342b557c7a552e0p1ff86bjsnae99b46c9498',
+          'X-RapidAPI-Host': 'spotify23.p.rapidapi.com'
+        });
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final items = data['items'] as List;
+      for (var item in items) {
+        final track = item['track'];
+        final album = track['album'];
+        final image = album['images'];
+        if (track['name'] != null &&
+            track['preview_url'] != null &&
+            image[2]['url'] != null) {
+          String name = track['name'];
+          String preview_url = track['preview_url'];
+          String image_url = image[2]['url'];
+          Track newTrack = Track(name, preview_url, image_url);
+          listTrack.add(newTrack);
+        }
+      }
+      return listTrack;
+    } else {
+      print(response.statusCode);
+      return [];
+    }
+  }
+
+  Future<List<Track>> getRecommendTrack() async {
     List<Track> list = [];
     String url = 'https://spotify23.p.rapidapi.com/recommendations/';
     String limit = '20';
@@ -59,11 +102,98 @@ class TrackManager {
     }
   }
 
-  TrackManager() {
-    _dataFuture = getPlaylist();
+  Future<List<Track>> getPlaylistFromFolder() async {
+    final status = await Permission.storage.request();
+    if (status.isGranted) {
+      final baseStorage = await getExternalStorageDirectory();
+      List<FileSystemEntity> files = await baseStorage!.list().toList();
+      List<File> mp3Files = files
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.mp3'))
+          .toList();
+      List<File> imgFiles = files
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.png'))
+          .toList();
+      List<Map<String, String>> listImg = [];
+      for (int i = 0; i < imgFiles.length; i++) {
+        String imgName =
+            imgFiles[i].path.substring(imgFiles[i].path.lastIndexOf('/') + 1);
+        String imgPath = imgFiles[i].path;
+        listImg.add({
+          'name': imgName,
+          'path': imgPath,
+        });
+      }
+
+      List<Track> list = [];
+      for (int i = 0; i < mp3Files.length; i++) {
+        String name =
+            mp3Files[i].path.substring(mp3Files[i].path.lastIndexOf('/') + 1);
+        String preview_url = mp3Files[i].path;
+        for (var img in listImg) {
+          var imgName = img['name'];
+          if (imgName != null &&
+              imgName.substring(0, imgName.length - 4) ==
+                  name.substring(0, name.length - 4)) {
+            var imgPath = img['path'];
+            if (imgPath != null) {
+              String image = imgPath;
+              Track newTrack = Track(name, preview_url, image);
+              list.add(newTrack);
+              break;
+            }
+          }
+        }
+      }
+      return list;
+    } else {
+      return [];
+    }
   }
 
-  Future<List<Track>> get dataFuture => _dataFuture;
+  TrackManager() {
+    _dataRecommendTrack = getRecommendTrack();
+    _dataLocal = getPlaylistFromFolder();
+    _dataPlaylists = getPlaylistTracks();
+    getTracks();
+  }
+
+  Future<List<Track>> get dataFuture => _dataRecommendTrack;
+
+  List<Track> get tracks => _tracks;
+
+  AudioPlayer get audioPlayer => _audioPlayer;
+
+  bool get isPlaying => _isPlaying;
+
+  int get currentTrack => _currentTrack;
+
+  bool get isLoop => _isLoop;
+
+  double get volume => _volume;
+
+  ValueNotifier<Duration> get positionNotifier => _positionNotifier;
+
+  ValueNotifier<bool> get isLoading => _isLoading;
+
+  Duration get duration => _duration;
+
+  Future<List<Track>> get dataLocal => _dataLocal;
+
+  String get localAudio => _localAudio;
+
+  bool get isSlected => _isSlected;
+
+  Future<List<Track>> get dataPlaylists => _dataPlaylists;
+
+  set isSlected(bool value) {
+    _isSlected = value;
+  }
+
+  set localAudio(String value) {
+    _localAudio = value;
+  }
 
   set isPlaying(bool value) {
     _isPlaying = value;
@@ -81,23 +211,9 @@ class TrackManager {
     _volume = value;
   }
 
-  AudioPlayer get audioPlayer => _audioPlayer;
-
-  ValueNotifier<bool> get isCompleted => _isCompleted;
-
-  bool get isPlaying => _isPlaying;
-
-  int get currentTrack => _currentTrack;
-
-  bool get isLoop => _isLoop;
-
-  double get volume => _volume;
-
-  ValueNotifier<Duration> get positionNotifier => _positionNotifier;
-
-  ValueNotifier<bool> get isLoading => _isLoading;
-
-  Duration get duration => _duration;
+  set dataLocal(Future<List<Track>> value) {
+    _dataLocal = value;
+  }
 
   void listen() {
     _audioPlayer.onPositionChanged.listen((newPosition) {
@@ -115,6 +231,10 @@ class TrackManager {
     // });
   }
 
+  void getTracks() async {
+    _tracks = await _dataRecommendTrack;
+  }
+
   void setPlay() {
     _audioPlayer.setVolume(_volume);
     if (_isLoop) {
@@ -124,31 +244,48 @@ class TrackManager {
     }
   }
 
+  void seek(Duration position) {
+    if (position != _duration) {
+      _audioPlayer.seek(position);
+    }
+  }
+
   Future<void> playOrpause(int id) async {
-    List<Track> tracks = await _dataFuture;
-    print("So luong bai hatttttttttttt ${tracks.length}");
+    _tracks = await _dataRecommendTrack;
+    _download = await _dataLocal;
+    _playlists = await _dataPlaylists;
+
+    print("So luong bai hattttttttttt ${tracks.length}");
     print("Bai hat hien taiiiiiiiiiiii $_currentTrack");
 
-    try {
+    if (manager.localAudio == "recommendation") {
       if (id >= 0 && id < tracks.length) {
-        bool isDownloaded = await findTrackInLocal(tracks[id].name);
-        print("oooooooooooooooooooooooooooooo$isDownloaded");
+        String standardName = tracks[id].name.replaceAll(RegExp(r'[^\w\-_\.]'), '_');
+        standardName = standardName.replaceAll(RegExp(r'\.{2,}'), '.');
+        if (standardName.startsWith('.')) {
+          standardName = standardName.substring(1);
+        }
+        if (standardName.endsWith('.')) {
+          standardName = standardName.substring(0, standardName.length - 1);
+        }
+        bool isDownloaded = await findTrackInLocal(standardName);
+        print("ooooooooooooooooooooooooooooo$isDownloaded");
         if (_isPlaying) {
           if (isDownloaded) {
+            _isLoading.value = false;
             await _audioPlayer.play(DeviceFileSource(
-                "storage/emulated/0/Android/data/com.example.ui_music_app/files/${tracks[id].name}.mp3"));
+                "storage/emulated/0/Android/data/com.example.ui_music_app/files/${standardName}.mp3"));
             _currentTrack = id;
           } else {
             _isLoading.value = true;
-            print("Oldddddddddddddddddddd $_currentTrack");
             Source source = UrlSource(tracks[id].preview_url);
             positionNotifier.value = Duration.zero;
             await _audioPlayer.setSource(source);
             await _audioPlayer.play(source);
-            _currentTrack = id;
-            _isCompleted.value = false;
-            print("Newwwwwwwwwwwwwwwwww $_currentTrack");
-            _isLoading.value = false;
+            if (_audioPlayer.state == PlayerState.playing) {
+              _currentTrack = id;
+              _isLoading.value = false;
+            }
           }
         } else {
           _audioPlayer.pause();
@@ -157,8 +294,57 @@ class TrackManager {
       } else {
         print("Đã phát hết danh sách");
       }
-    } catch (e) {
-      print("Looiiiiiiiiii $e");
+    } else if (manager.localAudio == "download") {
+      if (id >= 0 && id < _download.length) {
+        print(_download[id].preview_url);
+        if (_isPlaying) {
+          _isLoading.value = false;
+          await _audioPlayer.play(DeviceFileSource(_download[id].preview_url));
+          _currentTrack = id;
+        } else {
+          _audioPlayer.pause();
+          _currentTrack = id;
+        }
+      } else {
+        print("Đã phát hết danh sách");
+      }
+    }
+    else if (manager.localAudio == "popular") {
+      if (id >= 0 && id < _playlists.length) {
+        String standardName = _playlists[id].name.replaceAll(RegExp(r'[^\w\-_\.]'), '_');
+        standardName = standardName.replaceAll(RegExp(r'\.{2,}'), '.');
+        if (standardName.startsWith('.')) {
+          standardName = standardName.substring(1);
+        }
+        if (standardName.endsWith('.')) {
+          standardName = standardName.substring(0, standardName.length - 1);
+        }
+        bool isDownloaded = await findTrackInLocal(standardName);
+        print("ooooooooooooooooooooooooooooo$isDownloaded");
+        if (_isPlaying) {
+          if (isDownloaded) {
+            _isLoading.value = false;
+            await _audioPlayer.play(DeviceFileSource(
+                "storage/emulated/0/Android/data/com.example.ui_music_app/files/${standardName}.mp3"));
+            _currentTrack = id;
+          } else {
+            _isLoading.value = true;
+            Source source = UrlSource(_playlists[id].preview_url);
+            positionNotifier.value = Duration.zero;
+            await _audioPlayer.setSource(source);
+            await _audioPlayer.play(source);
+            if (_audioPlayer.state == PlayerState.playing) {
+              _currentTrack = id;
+              _isLoading.value = false;
+            }
+          }
+        } else {
+          _audioPlayer.pause();
+          _currentTrack = id;
+        }
+      } else {
+        print("Đã phát hết danh sách");
+      }
     }
   }
 
@@ -167,27 +353,41 @@ class TrackManager {
         '/storage/emulated/0/Android/data/com.example.ui_music_app/files');
     if (!await directory.exists()) {
       return false;
-    }
-    else {
+    } else {
       List<FileSystemEntity> files = await directory.list().toList();
       List<File> mp3Files = files
           .whereType<File>()
           .where((file) => file.path.endsWith('.mp3'))
           .toList();
       List<File> matchingFiles =
-      mp3Files.where((file) => file.path.contains(trackName)).toList();
+          mp3Files.where((file) => file.path.contains(trackName)).toList();
       return matchingFiles.isNotEmpty;
     }
   }
 
-  Future downLoadFile(String url, String name) async {
+  Future downLoadFile(String mp3Url, String name, String imgUrl) async {
+    String standardName = name.replaceAll(RegExp(r'[^\w\-_\.]'), '_');
+    standardName = standardName.replaceAll(RegExp(r'\.{2,}'), '.');
+    if (standardName.startsWith('.')) {
+      standardName = standardName.substring(1);
+    }
+    if (standardName.endsWith('.')) {
+      standardName = standardName.substring(0, standardName.length - 1);
+    }
     final status = await Permission.storage.request();
     if (status.isGranted) {
       final baseStorage = await getExternalStorageDirectory();
       final taskId = await FlutterDownloader.enqueue(
-        url: url,
+        url: mp3Url,
         savedDir: baseStorage!.path,
-        fileName: '$name.mp3',
+        fileName: '$standardName.mp3',
+        showNotification: true,
+        openFileFromNotification: true,
+      );
+      final imageTaskId = await FlutterDownloader.enqueue(
+        url: imgUrl,
+        savedDir: baseStorage.path,
+        fileName: '$standardName.png',
         showNotification: true,
         openFileFromNotification: true,
       );
@@ -197,13 +397,7 @@ class TrackManager {
   @pragma('vm:entry-point')
   static void downloadCallback(String id, int status, int progress) {
     final SendPort? send =
-    IsolateNameServer.lookupPortByName('downloader_send_port');
+        IsolateNameServer.lookupPortByName('downloader_send_port');
     send!.send([id, status, progress]);
-  }
-
-  void seek(Duration position) {
-    if (position != _duration) {
-      _audioPlayer.seek(position);
-    }
   }
 }
