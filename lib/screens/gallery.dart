@@ -1,12 +1,12 @@
-import 'dart:convert';
+import 'dart:async';
 import 'package:ui_music_app/models/TrackManager.dart';
+import 'package:ui_music_app/screens/search.dart';
 import 'package:ui_music_app/widgets/box.dart';
 import 'package:ui_music_app/widgets/verticalList.dart';
 import '../models/Track.dart';
 import './home.dart';
 import 'package:flutter/material.dart';
 import 'player.dart';
-import 'package:http/http.dart' as http;
 import 'package:marquee/marquee.dart';
 
 TrackManager manager = TrackManager();
@@ -19,9 +19,32 @@ class Gallery extends StatefulWidget {
 }
 
 class GalleryState extends State<Gallery> {
+  late PageController _pageController;
+  int _currentPage = 0;
+  late Timer _timer;
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
+    _timer = Timer.periodic(Duration(seconds: 5), (Timer timer) {
+      if (_currentPage < 9) {
+        _currentPage++;
+      } else {
+        _currentPage = 0;
+      }
+      _pageController.animateToPage(
+        _currentPage,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -29,13 +52,14 @@ class GalleryState extends State<Gallery> {
     return SafeArea(
         child: Scaffold(
             appBar: AppBar(
-              title: const Text("Gallery"),
+              title: const Text("G a l l e r y"),
             ),
             body: Column(
               children: [
                 SizedBox(
                   height: 220,
                   child: PageView.builder(
+                    controller: _pageController,
                     itemCount: 9,
                     itemBuilder: (context, index) {
                       return Center(
@@ -53,7 +77,6 @@ class GalleryState extends State<Gallery> {
                             ),
                             Container(
                               margin: const EdgeInsets.only(top: 130,left: 20),
-
                               child: const Text(
                                 "A.L.O.N.E",
                                 style: TextStyle(
@@ -252,7 +275,7 @@ class GalleryState extends State<Gallery> {
                 Column(mainAxisSize: MainAxisSize.min, children: [
               if (manager.isSlected == true)
                 Container(
-                  padding: EdgeInsets.only(left: 8.0, right: 8.0),
+                  padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                   child: Column(
                     children: [
                       Row(
@@ -335,7 +358,10 @@ class GalleryState extends State<Gallery> {
                       print("Favorite item tapped!");
                       break;
                     case 1:
-                      print('Search item tapped!');
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const Search()));
                       break;
                     case 2:
                       Navigator.push(

@@ -40,7 +40,8 @@ class TrackManager {
         Uri.parse(
             "https://spotify23.p.rapidapi.com/playlist_tracks/?id=$id&offset=$offset&limit=$limit"),
         headers: {
-          'X-RapidAPI-Key': 'efa54cf780msh342b557c7a552e0p1ff86bjsnae99b46c9498',
+          'X-RapidAPI-Key':
+              'efa54cf780msh342b557c7a552e0p1ff86bjsnae99b46c9498',
           'X-RapidAPI-Host': 'spotify23.p.rapidapi.com'
         });
     if (response.statusCode == 200) {
@@ -233,6 +234,8 @@ class TrackManager {
 
   void getTracks() async {
     _tracks = await _dataRecommendTrack;
+    _download = await _dataLocal;
+    _playlists = await _dataPlaylists;
   }
 
   void setPlay() {
@@ -251,16 +254,13 @@ class TrackManager {
   }
 
   Future<void> playOrpause(int id) async {
-    _tracks = await _dataRecommendTrack;
-    _download = await _dataLocal;
-    _playlists = await _dataPlaylists;
-
     print("So luong bai hattttttttttt ${tracks.length}");
     print("Bai hat hien taiiiiiiiiiiii $_currentTrack");
 
     if (manager.localAudio == "recommendation") {
       if (id >= 0 && id < tracks.length) {
-        String standardName = tracks[id].name.replaceAll(RegExp(r'[^\w\-_\.]'), '_');
+        String standardName =
+            tracks[id].name.replaceAll(RegExp(r'[^\w\-_\.]'), '_');
         standardName = standardName.replaceAll(RegExp(r'\.{2,}'), '.');
         if (standardName.startsWith('.')) {
           standardName = standardName.substring(1);
@@ -268,7 +268,7 @@ class TrackManager {
         if (standardName.endsWith('.')) {
           standardName = standardName.substring(0, standardName.length - 1);
         }
-        bool isDownloaded = await findTrackInLocal(standardName);
+        bool isDownloaded = await findTrackInDevice(standardName);
         print("ooooooooooooooooooooooooooooo$isDownloaded");
         if (_isPlaying) {
           if (isDownloaded) {
@@ -308,10 +308,10 @@ class TrackManager {
       } else {
         print("Đã phát hết danh sách");
       }
-    }
-    else if (manager.localAudio == "popular") {
+    } else if (manager.localAudio == "popular") {
       if (id >= 0 && id < _playlists.length) {
-        String standardName = _playlists[id].name.replaceAll(RegExp(r'[^\w\-_\.]'), '_');
+        String standardName =
+            _playlists[id].name.replaceAll(RegExp(r'[^\w\-_\.]'), '_');
         standardName = standardName.replaceAll(RegExp(r'\.{2,}'), '.');
         if (standardName.startsWith('.')) {
           standardName = standardName.substring(1);
@@ -319,7 +319,7 @@ class TrackManager {
         if (standardName.endsWith('.')) {
           standardName = standardName.substring(0, standardName.length - 1);
         }
-        bool isDownloaded = await findTrackInLocal(standardName);
+        bool isDownloaded = await findTrackInDevice(standardName);
         print("ooooooooooooooooooooooooooooo$isDownloaded");
         if (_isPlaying) {
           if (isDownloaded) {
@@ -348,7 +348,7 @@ class TrackManager {
     }
   }
 
-  Future<bool> findTrackInLocal(String trackName) async {
+  Future<bool> findTrackInDevice(String trackName) async {
     Directory directory = Directory(
         '/storage/emulated/0/Android/data/com.example.ui_music_app/files');
     if (!await directory.exists()) {
@@ -399,5 +399,42 @@ class TrackManager {
     final SendPort? send =
         IsolateNameServer.lookupPortByName('downloader_send_port');
     send!.send([id, status, progress]);
+  }
+
+  Future<List<Track>> findTrack(String name) async {
+    List<Track> result = [];
+    tracks.forEach((element) {
+      if (element.name.toLowerCase().contains(name)) {
+        result.add(element);
+      }
+    });
+    // _download.forEach((element) {
+    //   if(element.name.contains(name)){
+    //     result.add(element);
+    //   }
+    // });
+    _playlists.forEach((element) {
+      if (element.name.toLowerCase().contains(name)) {
+        result.add(element);
+      }
+    });
+    return result;
+  }
+
+  String findTrackLocation(String name) {
+    String rs = "";
+    tracks.forEach((element) {
+      if (element.name.toLowerCase() == name.toLowerCase()) {
+        rs = "recommendation";
+        currentTrack = tracks.indexWhere((element) => element.name.toLowerCase() == name.toLowerCase());
+      }
+    });
+    _playlists.forEach((element) {
+      if (element.name.toLowerCase() == name.toLowerCase()) {
+        rs = "popular";
+        currentTrack = tracks.indexWhere((element) => element.name.toLowerCase() == name.toLowerCase());
+      }
+    });
+    return rs;
   }
 }

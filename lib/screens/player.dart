@@ -136,7 +136,7 @@ class _PlayerState extends State<Player> {
                         Container(
                           margin: const EdgeInsets.only(left: 90),
                           child: const Icon(
-                            Icons.ios_share,
+                            Icons.favorite,
                             color: Colors.yellow,
                           ),
                         ),
