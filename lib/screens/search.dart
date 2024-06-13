@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ui_music_app/screens/gallery.dart';
-import 'package:ui_music_app/screens/player.dart';
+import 'package:music/screens/gallery.dart';
+import 'package:music/screens/player.dart';
 import '../models/Track.dart';
 import '../widgets/verticalList.dart';
 import 'home.dart';

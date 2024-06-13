@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:ui_music_app/screens/gallery.dart';
+import 'package:music/screens/gallery.dart';
 
 import '../models/Track.dart';
 import '../screens/player.dart';

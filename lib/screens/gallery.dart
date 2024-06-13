@@ -1,10 +1,9 @@
 import 'dart:async';
-import 'package:ui_music_app/models/TrackManager.dart';
-import 'package:ui_music_app/screens/search.dart';
-import 'package:ui_music_app/widgets/box.dart';
-import 'package:ui_music_app/widgets/verticalList.dart';
+import 'package:music/models/TrackManager.dart';
+import 'package:music/widgets/bottom_navigation_bar.dart';
+import 'package:music/widgets/box.dart';
+import 'package:music/widgets/verticalList.dart';
 import '../models/Track.dart';
-import './home.dart';
 import 'package:flutter/material.dart';
 import 'player.dart';
 import 'package:marquee/marquee.dart';
@@ -328,62 +327,7 @@ class GalleryState extends State<Gallery> {
                     ],
                   ),
                 ),
-              BottomNavigationBar(
-                type: BottomNavigationBarType.fixed,
-                items: const <BottomNavigationBarItem>[
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.favorite_border),
-                    label: 'Favorite',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.search),
-                    label: 'Search',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    label: 'Hom',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.library_add_check),
-                    label: 'Downloaded',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person),
-                    label: 'Profile',
-                  ),
-                ],
-                onTap: (index) {
-                  switch (index) {
-                    case 0:
-                      print("Favorite item tapped!");
-                      break;
-                    case 1:
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const Search()));
-                      break;
-                    case 2:
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const Home()));
-                      break;
-                    case 3:
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => VerticalList(
-                                  name: "Download",
-                                  data: manager.dataLocal,
-                                  location: "download")));
-                      break;
-                    case 4:
-                      print('Profile item tapped!');
-                      break;
-                  }
-                },
-              ),
+              BottomBar()
             ])));
   }
 

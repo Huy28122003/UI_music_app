@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
-        android:label="ui_music_app"
+        android:label="music"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

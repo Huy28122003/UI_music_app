@@ -9,7 +9,7 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:ui_music_app/screens/gallery.dart';
+import 'package:music/screens/gallery.dart';
 import 'Track.dart';
 
 class TrackManager {
@@ -160,6 +160,7 @@ class TrackManager {
     getTracks();
   }
 
+
   Future<List<Track>> get dataFuture => _dataRecommendTrack;
 
   List<Track> get tracks => _tracks;
@@ -274,7 +275,7 @@ class TrackManager {
           if (isDownloaded) {
             _isLoading.value = false;
             await _audioPlayer.play(DeviceFileSource(
-                "storage/emulated/0/Android/data/com.example.ui_music_app/files/${standardName}.mp3"));
+                "storage/emulated/0/Android/data/com.example.music/files/${standardName}.mp3"));
             _currentTrack = id;
           } else {
             _isLoading.value = true;
@@ -325,7 +326,7 @@ class TrackManager {
           if (isDownloaded) {
             _isLoading.value = false;
             await _audioPlayer.play(DeviceFileSource(
-                "storage/emulated/0/Android/data/com.example.ui_music_app/files/${standardName}.mp3"));
+                "storage/emulated/0/Android/data/com.example.music/files/${standardName}.mp3"));
             _currentTrack = id;
           } else {
             _isLoading.value = true;
@@ -350,7 +351,7 @@ class TrackManager {
 
   Future<bool> findTrackInDevice(String trackName) async {
     Directory directory = Directory(
-        '/storage/emulated/0/Android/data/com.example.ui_music_app/files');
+        '/storage/emulated/0/Android/data/com.example.music/files');
     if (!await directory.exists()) {
       return false;
     } else {

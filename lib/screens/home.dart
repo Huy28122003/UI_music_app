@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:music/screens/signUp.dart';
 import './gallery.dart';
 class Home extends StatefulWidget{
   const Home({super.key});
@@ -71,12 +72,19 @@ class _HomeState extends State<Home>{
                      width: 1
                    )
                  ),
-                 child: const Text(
-                   "Continue with Email",
-                   style: TextStyle(
-                     fontSize: 20,
-                     color: Colors.deepOrange
+                 child:TextButton(
+                   child:  const Text(
+                     "Continue with Email",
+                     style: TextStyle(
+                         fontSize: 20,
+                         color: Colors.deepOrange
+                     ),
                    ),
+                   onPressed: (){
+                     Navigator.push(context, MaterialPageRoute(
+                         builder: (context) =>  SignUp()
+                     ));
+                   },
                  )
              ),
              Container(
