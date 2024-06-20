@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:music/screens/signUp.dart';
+import 'package:music/screens/signIn.dart';
 import './gallery.dart';
-class Home extends StatefulWidget{
+
+class Home extends StatefulWidget {
   const Home({super.key});
 
   @override
@@ -10,98 +11,89 @@ class Home extends StatefulWidget{
   }
 }
 
-class _HomeState extends State<Home>{
+class _HomeState extends State<Home> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-         body: Column(
-           children: [
-             Stack(
-               children: [
-                 Image.asset(
-                   "assets/images/img.png",
-                   width: double.infinity,
-                   fit: BoxFit.fitWidth,
-                 ),
-                 const Positioned(
-                   top: 190,
-                     left: 44,
-                     child: Text(
-                       "Dacing between \n"
-                           "The shadow \n"
-                           "Of rhythm",
-                       style: TextStyle(
-                         fontSize: 36
-                       ),
-                     ),
-                 ),
-               ],
-             ),
-             Container(
-               margin: const EdgeInsets.only(top: 20),
-               child: SizedBox(
-                 width: 230,
-                 child: ElevatedButton(
-                   onPressed: () {
-                     Navigator.push(context, MaterialPageRoute(
-                         builder: (context) =>  Gallery()
-                     ));
-                   },
-                   style: ElevatedButton.styleFrom(
-                     backgroundColor: Colors.deepOrange,
-                   ),
-                   child: const Text(
-                     "Get started",
-                     style: TextStyle(
-                       fontSize: 20,
-                       color: Colors.black,
-                     ),
-                   ),
-                 ),
-               ),
-             ),
-             ElevatedButton(
-                 onPressed: (){
-
-                 },
-                 style: ElevatedButton.styleFrom(
-                   backgroundColor: Colors.black,
-                   side: const BorderSide(
-                     color: Colors.deepOrange,
-                     width: 1
-                   )
-                 ),
-                 child:TextButton(
-                   child:  const Text(
-                     "Continue with Email",
-                     style: TextStyle(
-                         fontSize: 20,
-                         color: Colors.deepOrange
-                     ),
-                   ),
-                   onPressed: (){
-                     Navigator.push(context, MaterialPageRoute(
-                         builder: (context) =>  SignUp()
-                     ));
-                   },
-                 )
-             ),
-             Container(
-               margin: const EdgeInsets.only(top: 20),
-               child: const Text(
-                 "by continuing you agree to terms \n"
-                     "of services and  Privacy policy",
-                 style: TextStyle(
-                   color: Colors.grey
-                 ),
-               ),
-             )
-           ],
-         ),
-        )
-    );
+      body: Column(
+        children: [
+          Stack(
+            children: [
+              Container(padding: const EdgeInsets.all(20),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.asset(
+                    "assets/images/img.png",
+                    width: double.infinity,
+                    fit: BoxFit.fitWidth,
+                  ),
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(top: 230,left: 40),
+                child: const Text(
+                  "Make your life \n"
+                      "more interesting",
+                  style: TextStyle(
+                      fontSize: 25,
+                      color: Colors.white
+                  ),
+                ),
+              )
+            ],
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: 20),
+            child: SizedBox(
+              width: 230,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => Gallery()));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepOrange,
+                ),
+                child: const Text(
+                  "Get started",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => const SignIn()));
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                side: const BorderSide(color: Colors.deepOrange, width: 1)),
+            child: const Text(
+              "Continue with Email",
+              style: TextStyle(fontSize: 20, color: Colors.deepOrange),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: 20),
+            child: const Text(
+              "by continuing you agree to terms \n"
+              "of services and  Privacy policy",
+              style: TextStyle(color: Colors.grey),
+            ),
+          )
+        ],
+      ),
+    ));
   }
 }
-
-

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:music/screens/gallery.dart';
 import 'package:music/screens/player.dart';
-import '../models/Track.dart';
+import '../models/RapidTrack.dart';
 import '../widgets/verticalList.dart';
 import 'home.dart';
 

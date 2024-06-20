@@ -1,8 +1,12 @@
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:music/screens/gallery.dart';
+import 'package:music/services/auto_login_service.dart';
 import 'screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +18,16 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(MaterialApp(
-      theme: ThemeData(brightness: Brightness.light), home: const Home()));
+      theme: ThemeData(brightness: Brightness.light),
+      home: const AutoLogin(),
+    routes: {
+      '/home': (context) => const Home(),
+      '/gallery': (context) =>  Gallery(),
+    },
+  )
+  );
+
 }
+
 
 

@@ -2,7 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:music/screens/gallery.dart';
 import 'package:music/screens/signIn.dart';
-import 'package:music/services/firebase_authen.dart';
+import 'package:music/services/firebase_authen_service.dart';
+import 'package:music/services/firebase_tracker_service.dart';
+
+import '../models/Tracker.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -13,6 +16,7 @@ class SignUp extends StatefulWidget {
 
 class _SignUpState extends State<SignUp> {
   final FirebaseAuthenService _authenService = FirebaseAuthenService();
+  FirebaseTracker _firebaseTracker = FirebaseTracker();
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
@@ -39,7 +43,7 @@ class _SignUpState extends State<SignUp> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              margin: EdgeInsets.all(8.0),
+              margin: const EdgeInsets.all(8.0),
               child: TextField(
                 controller: _usernameController,
                 decoration: InputDecoration(
@@ -57,7 +61,7 @@ class _SignUpState extends State<SignUp> {
               ),
             ),
             Container(
-              margin: EdgeInsets.all(8.0),
+              margin: const EdgeInsets.all(8.0),
               child: TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -75,7 +79,7 @@ class _SignUpState extends State<SignUp> {
               ),
             ),
             Container(
-              margin: EdgeInsets.all(8.0),
+              margin: const EdgeInsets.all(8.0),
               child: TextField(
                 controller: _passwordController,
                 obscureText: true,
@@ -98,15 +102,15 @@ class _SignUpState extends State<SignUp> {
                   _signUp();
                 },
                 child: isSigning
-                    ? CircularProgressIndicator()
+                    ? const CircularProgressIndicator()
                     : const Text("Confirm")),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Already have an account?"),
+                const Text("Already have an account?"),
                 TextButton(onPressed: (){
                   Navigator.push(
-                      context, MaterialPageRoute(builder: (context) => SignIn()));
+                      context, MaterialPageRoute(builder: (context) => const SignIn()));
                 }, child: const Text("Login"))
               ],
             )
@@ -126,6 +130,7 @@ class _SignUpState extends State<SignUp> {
 
     User? user =
         await _authenService.signUpWithEmailAndPassword(context,email, password);
+    _firebaseTracker.addUser(Tracker(user!.uid,"",0,"",[],[]));
     setState(() {
       isSigning = false;
     });

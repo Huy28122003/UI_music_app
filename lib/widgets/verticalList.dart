@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:music/screens/gallery.dart';
 
-import '../models/Track.dart';
+import '../models/RapidTrack.dart';
 import '../screens/player.dart';
 
 class VerticalList extends StatelessWidget {

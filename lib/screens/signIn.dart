@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:music/screens/gallery.dart';
 import 'package:music/screens/signUp.dart';
-import 'package:music/services/firebase_authen.dart';
+import 'package:music/services/firebase_authen_service.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -35,7 +35,7 @@ class _SignUpState extends State<SignIn> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            margin: EdgeInsets.all(8.0),
+            margin: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _emailController,
               decoration: InputDecoration(
@@ -53,7 +53,7 @@ class _SignUpState extends State<SignIn> {
             ),
           ),
           Container(
-            margin: EdgeInsets.all(8.0),
+            margin: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _passwordController,
               obscureText: true,
@@ -83,7 +83,7 @@ class _SignUpState extends State<SignIn> {
               TextButton(
                   onPressed: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => SignUp()));
+                        MaterialPageRoute(builder: (context) => const SignUp()));
                   },
                   child: const Text("Sign up"))
             ],

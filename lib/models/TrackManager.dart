@@ -7,16 +7,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:http/http.dart' as http;
+import 'package:music/services/firebase_track_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:music/screens/gallery.dart';
-import 'Track.dart';
+import 'FirebaseTrack.dart';
+import 'RapidTrack.dart';
 
 class TrackManager {
   final AudioPlayer _audioPlayer = AudioPlayer();
   late final Future<List<Track>> _dataRecommendTrack;
   late Future<List<Track>> _dataLocal;
   late final Future<List<Track>> _dataPlaylists;
+  late Future <List<Song>> _dataPlaylistsFromFirebase;
+  final FirebaseSong _firebaseSong = FirebaseSong();
   late int _currentTrack;
   bool _isPlaying = true;
   bool _isLoop = false;
@@ -28,8 +32,10 @@ class TrackManager {
   List<Track> _tracks = [];
   List<Track> _download = [];
   List<Track> _playlists = [];
+  List<Song> _songs = [];
   late String _localAudio;
   bool _isSlected = false;
+  bool _isLike = false;
 
   Future<List<Track>> getPlaylistTracks() async {
     String id = '37i9dQZF1DX4Wsb4d7NKfP';
@@ -157,9 +163,16 @@ class TrackManager {
     _dataRecommendTrack = getRecommendTrack();
     _dataLocal = getPlaylistFromFolder();
     _dataPlaylists = getPlaylistTracks();
+    _dataPlaylistsFromFirebase = _firebaseSong.getSongsFromCollection("playlists");
     getTracks();
   }
 
+
+  bool get isLike => _isLike;
+
+  set isLike(bool value) {
+    _isLike = value;
+  }
 
   Future<List<Track>> get dataFuture => _dataRecommendTrack;
 
@@ -188,6 +201,11 @@ class TrackManager {
   bool get isSlected => _isSlected;
 
   Future<List<Track>> get dataPlaylists => _dataPlaylists;
+
+  List<Song> get songs => _songs;
+
+  Future<List<Song>> get dataPlaylistsFromFirebase =>
+      _dataPlaylistsFromFirebase;
 
   set isSlected(bool value) {
     _isSlected = value;
@@ -237,6 +255,8 @@ class TrackManager {
     _tracks = await _dataRecommendTrack;
     _download = await _dataLocal;
     _playlists = await _dataPlaylists;
+    _songs  = await _dataPlaylistsFromFirebase;
+    print("${_songs.length}");
   }
 
   void setPlay() {
@@ -347,6 +367,44 @@ class TrackManager {
         print("Đã phát hết danh sách");
       }
     }
+    else if (manager.localAudio == "firebase") {
+      if (id >= 0 && id < _songs.length) {
+        String standardName =
+        _songs[id].name.replaceAll(RegExp(r'[^\w\-_\.]'), '_');
+        standardName = standardName.replaceAll(RegExp(r'\.{2,}'), '.');
+        if (standardName.startsWith('.')) {
+          standardName = standardName.substring(1);
+        }
+        if (standardName.endsWith('.')) {
+          standardName = standardName.substring(0, standardName.length - 1);
+        }
+        bool isDownloaded = await findTrackInDevice(standardName);
+        print("ooooooooooooooooooooooooooooo$isDownloaded");
+        if (_isPlaying) {
+          if (isDownloaded) {
+            _isLoading.value = false;
+            await _audioPlayer.play(DeviceFileSource(
+                "storage/emulated/0/Android/data/com.example.music/files/${standardName}.mp3"));
+            _currentTrack = id;
+          } else {
+            _isLoading.value = true;
+            Source source = UrlSource(_songs[id].mp3Url);
+            positionNotifier.value = Duration.zero;
+            await _audioPlayer.setSource(source);
+            await _audioPlayer.play(source);
+            if (_audioPlayer.state == PlayerState.playing) {
+              _currentTrack = id;
+              _isLoading.value = false;
+            }
+          }
+        } else {
+          _audioPlayer.pause();
+          _currentTrack = id;
+        }
+      } else {
+        print("Đã phát hết danh sách");
+      }
+    }
   }
 
   Future<bool> findTrackInDevice(String trackName) async {
@@ -438,4 +496,20 @@ class TrackManager {
     });
     return rs;
   }
+  Future getDataFuture(String localSend) {
+    switch (localSend) {
+      case "recommendation":
+        return manager.dataFuture;
+      case "download":
+        return manager.dataLocal;
+      case "popular":
+        return manager.dataPlaylists;
+      case "firebase":
+        return manager.dataPlaylistsFromFirebase;
+      default:
+        return manager.dataFuture;
+    }
+  }
+
+
 }

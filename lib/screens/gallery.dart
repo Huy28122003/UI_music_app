@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:music/models/TrackManager.dart';
+import 'package:music/services/firebase_tracker_service.dart';
 import 'package:music/widgets/bottom_navigation_bar.dart';
 import 'package:music/widgets/box.dart';
 import 'package:music/widgets/verticalList.dart';
-import '../models/Track.dart';
+import '../models/RapidTrack.dart';
 import 'package:flutter/material.dart';
+import '../models/Tracker.dart';
 import 'player.dart';
 import 'package:marquee/marquee.dart';
 
@@ -21,12 +25,14 @@ class GalleryState extends State<Gallery> {
   late PageController _pageController;
   int _currentPage = 0;
   late Timer _timer;
+  FirebaseTracker _firebaseTracker = FirebaseTracker();
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
     _timer = Timer.periodic(Duration(seconds: 5), (Timer timer) {
-      if (_currentPage < 9) {
+      if (_currentPage < manager.songs.length) {
         _currentPage++;
       } else {
         _currentPage = 0;
@@ -59,52 +65,32 @@ class GalleryState extends State<Gallery> {
                   height: 220,
                   child: PageView.builder(
                     controller: _pageController,
-                    itemCount: 9,
+                    itemCount: manager.songs.length,
                     itemBuilder: (context, index) {
                       return Center(
-                        child: Stack(
-                          children: [
-                            NeuBox(
-                              child: SizedBox(
-                                width: 250,
-                                height: 200,
-                                child: Image.asset(
-                                  "assets/images/img${index + 1}.png",
-                                  fit: BoxFit.fitWidth,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(top: 130,left: 20),
-                              child: const Text(
-                                "A.L.O.N.E",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.only(top: 160,left: 20),
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                ),
-                                onPressed: () {},
-                                child: const Text(
-                                  'Theo dõi',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontFamily: "Inter",
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          child: GestureDetector(
+                        child: NeuBox(
+                          child: SizedBox(
+                              width: 250,
+                              height: 190,
+                              child: Image.network(
+                                manager.songs[index].imgUrl,
+                                fit: BoxFit.cover,
+                              )),
                         ),
-                      );
+                        onTap: () async {
+                          manager.isLike = await checkLikes(manager.songs[index].id, FirebaseAuth.instance.currentUser!.uid);
+                          manager.currentTrack = index;
+                          manager.localAudio = "firebase";
+                          setState(() {
+                            manager.isSlected = true;
+                          });
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => Player()),
+                          );
+                        },
+                      ));
                     },
                   ),
                 ),
@@ -343,5 +329,20 @@ class GalleryState extends State<Gallery> {
         size: 30,
       );
     }
+  }
+
+  Future<bool> checkLikes(String songID, String userID) async {
+    Tracker? tracker = await _firebaseTracker.getUser(userID);
+    List? likes = tracker?.likes;
+    bool isLiked = false;
+    if (likes != null) {
+      for (var likeId in likes) {
+        if (likeId == songID) {
+          isLiked = true;
+          break;
+        }
+      }
+    }
+    return isLiked;
   }
 }
