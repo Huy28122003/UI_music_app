@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:music/screens/gallery.dart';
 import '../models/Tracker.dart';
 
 class FirebaseTracker {
@@ -38,8 +39,23 @@ class FirebaseTracker {
 
  Future<void> updateSongToLikes(String songID)async {
     String userID = FirebaseAuth.instance.currentUser!.uid;
-    _firestore.collection("users").doc(userID).update({
-      'likes': FieldValue.arrayUnion([songID])
-    });
+    print(songID);
+    print(userID);
+    print(manager.isLike);
+   try{
+     if(manager.isLike){
+       _firestore.collection("users").doc(userID).update({
+         'likes': FieldValue.arrayUnion([songID])
+       });
+     }
+     else{
+       _firestore.collection("users").doc(userID).update({
+         'likes': FieldValue.arrayRemove([songID])
+       });
+     }
+   }catch(e){
+     print("$e llllllllll");
+   }
+
  }
 }

@@ -63,36 +63,50 @@ class GalleryState extends State<Gallery> {
               children: [
                 SizedBox(
                   height: 220,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: manager.songs.length,
-                    itemBuilder: (context, index) {
-                      return Center(
-                          child: GestureDetector(
-                        child: NeuBox(
-                          child: SizedBox(
-                              width: 250,
-                              height: 190,
-                              child: Image.network(
-                                manager.songs[index].imgUrl,
-                                fit: BoxFit.cover,
-                              )),
-                        ),
-                        onTap: () async {
-                          manager.isLike = await checkLikes(manager.songs[index].id, FirebaseAuth.instance.currentUser!.uid);
-                          manager.currentTrack = index;
-                          manager.localAudio = "firebase";
-                          setState(() {
-                            manager.isSlected = true;
-                          });
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => Player()),
+                  child: FutureBuilder(
+                      future: manager.dataPlaylistsFromFirebase,
+                      builder: (context,snapshot){
+                        if(snapshot.hasData){
+                          return PageView.builder(
+                            controller: _pageController,
+                            itemCount: snapshot.data!.length,
+                            itemBuilder: (context, index) {
+                              return Center(
+                                  child: GestureDetector(
+                                    child: NeuBox(
+                                      child: SizedBox(
+                                          width: 250,
+                                          height: 190,
+                                          child: Image.network(
+                                            snapshot.data![index].imgUrl,
+                                            fit: BoxFit.cover,
+                                          )),
+                                    ),
+                                    onTap: () async {
+                                      manager.isLike = await checkLikes(manager.songs[index].id, FirebaseAuth.instance.currentUser!.uid);
+                                      manager.currentTrack = index;
+                                      manager.localAudio = "firebase";
+                                      setState(() {
+                                        manager.isSlected = true;
+                                      });
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => Player()),
+                                      );
+                                    },
+                                  ));
+                            },
                           );
-                        },
-                      ));
-                    },
-                  ),
+                        }else if(snapshot.hasError){
+                          return Center(
+                            child: Text(snapshot.error.toString()),
+                          );
+                        }else{
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                      })
                 ),
                 Row(children: [
                   const Text(

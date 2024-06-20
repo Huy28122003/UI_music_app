@@ -325,11 +325,10 @@ class _PlayerState extends State<Player> {
                                     setState(() {
                                       manager.isLike = !manager.isLike;
                                     });
-                                    if (manager.isLike) {
-                                      _firebaseSong.updateToLikes(
-                                          data[manager.currentTrack].id);
-                                      _firebaseTracker.updateSongToLikes(  data[manager.currentTrack].id);
-                                    }
+                                    _firebaseSong.updateToLikes(
+                                        data[manager.currentTrack].id);
+                                    _firebaseTracker.updateSongToLikes(
+                                        data[manager.currentTrack].id);
                                   },
                                   icon: (manager.isLike)
                                       ? const Icon(
@@ -345,7 +344,7 @@ class _PlayerState extends State<Player> {
                               valueListenable: manager.positionNotifier,
                               builder: (context, position, child) {
                                 return Container(
-                                    margin: const EdgeInsets.only(left: 70),
+                                    margin: const EdgeInsets.only(left: 71),
                                     child: Text(
                                         "${manager.duration.inSeconds.toDouble() - position.inSeconds.toDouble()}s"));
                               },

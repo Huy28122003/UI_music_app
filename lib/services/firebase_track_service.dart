@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:music/screens/gallery.dart';
 
 import '../models/FirebaseTrack.dart';
 
@@ -18,7 +19,6 @@ class FirebaseSong {
       final data = documentSnapshot.data();
       final song = Song.fromMap(data);
       song.id = documentSnapshot.id;
-      print(song.id);
       songs.add(song);
     }
     return songs;
@@ -34,7 +34,13 @@ class FirebaseSong {
         DocumentSnapshot snapshot = await transaction.get(documentReference);
         int currentLikes = snapshot.get('likes') ?? 0; // Nếu 'likes' không tồn tại, mặc định là 0
         // Cộng thêm 1 vào giá trị hiện tại
-        int newLikes = currentLikes + 1;
+        int newLikes;
+        if(manager.isLike){
+          newLikes = currentLikes + 1;
+        }
+        else{
+          newLikes = currentLikes - 1;
+        }
 
         // Cập nhật tài liệu với giá trị mới
         transaction.update(documentReference, {'likes': newLikes});
