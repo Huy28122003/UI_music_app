@@ -70,7 +70,7 @@ class _SearchState extends State<Search> {
                             children: [
                               FadeInImage.assetNetwork(
                                 placeholder: 'assets/images/img8.png',
-                                image: data[i].image,
+                                image: data[i].imgUrl,
                                 width: 100,
                                 imageErrorBuilder:
                                     (context, error, stackTrace) {
@@ -182,7 +182,7 @@ class _SearchState extends State<Search> {
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.home_outlined),
-                    label: 'Hom',
+                    label: 'Home',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.library_add_check),

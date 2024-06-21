@@ -6,6 +6,16 @@ import '../models/FirebaseTrack.dart';
 class FirebaseSong {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
+  Future<Song?> getSong(String sonID) async{
+    final doc = await _firebaseFirestore.collection('playlists').doc(sonID).get();
+    if (doc.exists) {
+      Song song = Song.fromMap(doc.data()!);
+      song.id = doc.id;
+      return song;
+    }
+    return null;
+  }
+
   Future<void> addSong(Song song,String id) async {
     await _firebaseFirestore.collection('playlists').doc(id).set(song.toMap());
   }

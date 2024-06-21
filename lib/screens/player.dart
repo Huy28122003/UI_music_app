@@ -75,196 +75,8 @@ class _PlayerState extends State<Player> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body: (manager.localAudio != "firebase")
+        body: (manager.localAudio == "firebase" || manager.localAudio == "favorite")
             ? FutureBuilder(
-                future: manager.getDataFuture(manager.localAudio),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    final List<Track> data = snapshot.data!;
-                    return Column(
-                      //mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                            margin: const EdgeInsets.only(top: 25),
-                            child: NeuBox(
-                                child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(15),
-                                    child: (manager.localAudio != "download")
-                                        ? Image.network(
-                                            data[manager.currentTrack].image,
-                                            height: 250,
-                                            width: 250,
-                                            fit: BoxFit.contain,
-                                          )
-                                        : Image.file(
-                                            File(data[manager.currentTrack]
-                                                .image),
-                                            height: 250,
-                                            width: 250,
-                                            fit: BoxFit.contain,
-                                          )))),
-                        SizedBox(
-                          height: 40.0,
-                          child: Marquee(
-                            text: data[manager.currentTrack].name,
-                            style: const TextStyle(
-                                fontSize: 24, color: Colors.amber),
-                            velocity: 10.0,
-                            blankSpace: 20.0,
-                            scrollAxis: Axis.horizontal,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            pauseAfterRound: const Duration(seconds: 1),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.only(left: 40),
-                              child: IconButton(
-                                icon: const Icon(Icons.download),
-                                onPressed: () {
-                                  manager.downLoadFile(
-                                      data[manager.currentTrack].preview_url,
-                                      data[manager.currentTrack].name,
-                                      data[manager.currentTrack].image);
-                                },
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(left: 90),
-                              child: const Icon(
-                                Icons.favorite,
-                                color: Colors.yellow,
-                              ),
-                            ),
-                            ValueListenableBuilder<Duration>(
-                              valueListenable: manager.positionNotifier,
-                              builder: (context, position, child) {
-                                return Container(
-                                    margin: const EdgeInsets.only(left: 70),
-                                    child: Text(
-                                        "${manager.duration.inSeconds.toDouble() - position.inSeconds.toDouble()}s"));
-                              },
-                            ),
-                          ],
-                        ),
-                        ValueListenableBuilder<Duration>(
-                          valueListenable: manager.positionNotifier,
-                          builder: (context, position, child) {
-                            return Slider(
-                              value: position.inSeconds.toDouble(),
-                              onChanged: (newValue) {
-                                Duration newPosition =
-                                    Duration(seconds: newValue.toInt());
-                                manager.seek(newPosition);
-                              },
-                              min: 0,
-                              max: manager.duration.inSeconds.toDouble(),
-                            );
-                          },
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: IconButton(
-                                icon: _setIconLoop(),
-                                onPressed: () {
-                                  setState(() {
-                                    manager.isLoop = !manager.isLoop;
-                                    manager.setPlay();
-                                  });
-                                },
-                              ),
-                            ),
-                            Expanded(
-                                child: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        if (manager.currentTrack != 0) {
-                                          manager.currentTrack--;
-                                          manager.playOrpause(
-                                              manager.currentTrack);
-                                          isCalled = false;
-                                        } else {
-                                          print("This is the first track");
-                                        }
-                                      });
-                                    },
-                                    icon: const Icon(
-                                      Icons.skip_previous,
-                                      size: 30,
-                                    ))),
-                            ValueListenableBuilder<bool>(
-                              valueListenable: manager.isLoading,
-                              builder: (context, isLoading, child) {
-                                return isLoading
-                                    ? const CircularProgressIndicator()
-                                    : Expanded(
-                                        child: IconButton(
-                                            onPressed: () async {
-                                              setState(() {
-                                                manager.isPlaying =
-                                                    !manager.isPlaying;
-                                              });
-                                              manager.playOrpause(
-                                                  manager.currentTrack);
-                                            },
-                                            icon: _setIconPlaying()));
-                              },
-                            ),
-                            Expanded(
-                                child: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        if (manager.currentTrack !=
-                                            data.length - 1) {
-                                          manager.currentTrack++;
-                                          manager.playOrpause(
-                                              manager.currentTrack);
-                                          isCalled = false;
-                                        } else {
-                                          print("This is the last track");
-                                        }
-                                      });
-                                    },
-                                    icon: const Icon(
-                                      Icons.skip_next,
-                                      size: 30,
-                                    ))),
-                            Expanded(
-                                child: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        showSetVolume = !showSetVolume;
-                                      });
-                                    },
-                                    icon: const Icon(Icons.volume_up)))
-                          ],
-                        ),
-                        if (showSetVolume)
-                          SizedBox(
-                            width: 200,
-                            child: Slider(
-                              value: manager.volume,
-                              onChanged: (value) {
-                                setState(() {
-                                  manager.volume = value;
-                                });
-                                manager.setPlay();
-                              },
-                              activeColor: Colors.blue,
-                              inactiveColor: Colors.grey,
-                            ),
-                          )
-                      ],
-                    );
-                  } else if (snapshot.hasError) {
-                    return Text('$snapshot.error');
-                  } else {
-                    return const CircularProgressIndicator();
-                  }
-                })
-            : FutureBuilder(
                 future: manager.getDataFuture(manager.localAudio),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
@@ -466,7 +278,194 @@ class _PlayerState extends State<Player> {
                   } else {
                     return const CircularProgressIndicator();
                   }
-                }),
+                }) :  FutureBuilder(
+            future: manager.getDataFuture(manager.localAudio),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                final List<Track> data = snapshot.data!;
+                return Column(
+                  //mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                        margin: const EdgeInsets.only(top: 25),
+                        child: NeuBox(
+                            child: ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: (manager.localAudio != "download")
+                                    ? Image.network(
+                                  data[manager.currentTrack].imgUrl,
+                                  height: 250,
+                                  width: 250,
+                                  fit: BoxFit.contain,
+                                )
+                                    : Image.file(
+                                  File(data[manager.currentTrack]
+                                      .imgUrl),
+                                  height: 250,
+                                  width: 250,
+                                  fit: BoxFit.contain,
+                                )))),
+                    SizedBox(
+                      height: 40.0,
+                      child: Marquee(
+                        text: data[manager.currentTrack].name,
+                        style: const TextStyle(
+                            fontSize: 24, color: Colors.amber),
+                        velocity: 10.0,
+                        blankSpace: 20.0,
+                        scrollAxis: Axis.horizontal,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        pauseAfterRound: const Duration(seconds: 1),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.only(left: 40),
+                          child: IconButton(
+                            icon: const Icon(Icons.download),
+                            onPressed: () {
+                              manager.downLoadFile(
+                                  data[manager.currentTrack].preview_url,
+                                  data[manager.currentTrack].name,
+                                  data[manager.currentTrack].imgUrl);
+                            },
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(left: 90),
+                          child: const Icon(
+                            Icons.favorite,
+                            color: Colors.yellow,
+                          ),
+                        ),
+                        ValueListenableBuilder<Duration>(
+                          valueListenable: manager.positionNotifier,
+                          builder: (context, position, child) {
+                            return Container(
+                                margin: const EdgeInsets.only(left: 70),
+                                child: Text(
+                                    "${manager.duration.inSeconds.toDouble() - position.inSeconds.toDouble()}s"));
+                          },
+                        ),
+                      ],
+                    ),
+                    ValueListenableBuilder<Duration>(
+                      valueListenable: manager.positionNotifier,
+                      builder: (context, position, child) {
+                        return Slider(
+                          value: position.inSeconds.toDouble(),
+                          onChanged: (newValue) {
+                            Duration newPosition =
+                            Duration(seconds: newValue.toInt());
+                            manager.seek(newPosition);
+                          },
+                          min: 0,
+                          max: manager.duration.inSeconds.toDouble(),
+                        );
+                      },
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: IconButton(
+                            icon: _setIconLoop(),
+                            onPressed: () {
+                              setState(() {
+                                manager.isLoop = !manager.isLoop;
+                                manager.setPlay();
+                              });
+                            },
+                          ),
+                        ),
+                        Expanded(
+                            child: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    if (manager.currentTrack != 0) {
+                                      manager.currentTrack--;
+                                      manager.playOrpause(
+                                          manager.currentTrack);
+                                      isCalled = false;
+                                    } else {
+                                      print("This is the first track");
+                                    }
+                                  });
+                                },
+                                icon: const Icon(
+                                  Icons.skip_previous,
+                                  size: 30,
+                                ))),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: manager.isLoading,
+                          builder: (context, isLoading, child) {
+                            return isLoading
+                                ? const CircularProgressIndicator()
+                                : Expanded(
+                                child: IconButton(
+                                    onPressed: () async {
+                                      setState(() {
+                                        manager.isPlaying =
+                                        !manager.isPlaying;
+                                      });
+                                      manager.playOrpause(
+                                          manager.currentTrack);
+                                    },
+                                    icon: _setIconPlaying()));
+                          },
+                        ),
+                        Expanded(
+                            child: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    if (manager.currentTrack !=
+                                        data.length - 1) {
+                                      manager.currentTrack++;
+                                      manager.playOrpause(
+                                          manager.currentTrack);
+                                      isCalled = false;
+                                    } else {
+                                      print("This is the last track");
+                                    }
+                                  });
+                                },
+                                icon: const Icon(
+                                  Icons.skip_next,
+                                  size: 30,
+                                ))),
+                        Expanded(
+                            child: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    showSetVolume = !showSetVolume;
+                                  });
+                                },
+                                icon: const Icon(Icons.volume_up)))
+                      ],
+                    ),
+                    if (showSetVolume)
+                      SizedBox(
+                        width: 200,
+                        child: Slider(
+                          value: manager.volume,
+                          onChanged: (value) {
+                            setState(() {
+                              manager.volume = value;
+                            });
+                            manager.setPlay();
+                          },
+                          activeColor: Colors.blue,
+                          inactiveColor: Colors.grey,
+                        ),
+                      )
+                  ],
+                );
+              } else if (snapshot.hasError) {
+                return Text('$snapshot.error');
+              } else {
+                return const CircularProgressIndicator();
+              }
+            })
       ),
     );
   }

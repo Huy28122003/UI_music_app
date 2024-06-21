@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:music/screens/favorite.dart';
 import 'package:music/screens/gallery.dart';
 import 'package:music/widgets/verticalList.dart';
 
@@ -37,7 +38,14 @@ class BottomBar extends StatelessWidget {
       onTap: (index) {
         switch (index) {
           case 0:
-            print("Favorite item tapped!");
+            manager.dataFavorite = manager.getFavoriteList();
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => VerticalList(
+                        name: "Favorites",
+                        data: manager.dataFavorite,
+                        location: "favorite")));
             break;
           case 1:
             Navigator.push(

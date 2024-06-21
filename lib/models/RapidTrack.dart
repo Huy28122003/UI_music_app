@@ -1,25 +1,25 @@
 class Track {
   String _name;
-  String _preview_url;
-  String _image;
+  String _mp3Url;
+  String _imgUrl;
 
-  Track(this._name, this._preview_url, this._image);
+  Track(this._name, this._mp3Url, this._imgUrl);
 
   LocalTrack(String name, String previewUrl) {
     _name = name;
-    _preview_url = previewUrl;
+    _mp3Url = previewUrl;
   }
 
-  String get image => _image;
+  String get imgUrl => _imgUrl;
 
-  set image(String value) {
-    _image = value;
+  set imgUrl(String value) {
+    _imgUrl = value;
   }
 
-  String get preview_url => _preview_url;
+  String get preview_url => _mp3Url;
 
   set preview_url(String value) {
-    _preview_url = value;
+    _mp3Url = value;
   }
 
   String get name => _name;

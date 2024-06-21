@@ -43,6 +43,7 @@ class GalleryState extends State<Gallery> {
         curve: Curves.easeInOut,
       );
     });
+
   }
 
   @override
@@ -165,7 +166,7 @@ class GalleryState extends State<Gallery> {
                                             FadeInImage.assetNetwork(
                                               placeholder:
                                                   'assets/images/img9.png',
-                                              image: "${data[i].image}",
+                                              image: "${data[i].imgUrl}",
                                               width: 80,
                                             ),
                                             SizedBox(
@@ -236,7 +237,7 @@ class GalleryState extends State<Gallery> {
                                   children: [
                                     FadeInImage.assetNetwork(
                                       placeholder: 'assets/images/img8.png',
-                                      image: data[i].image,
+                                      image: data[i].imgUrl,
                                       width: 100,
                                     ),
                                     Expanded(

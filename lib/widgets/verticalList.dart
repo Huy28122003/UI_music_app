@@ -8,7 +8,7 @@ import '../screens/player.dart';
 
 class VerticalList extends StatelessWidget {
   final String name;
-  final Future<List<Track>> data;
+  final Future<List<dynamic>> data;
   final String location;
 
   const VerticalList(
@@ -32,7 +32,7 @@ class VerticalList extends StatelessWidget {
                     future: data,
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        final List<Track> value = snapshot.data!;
+                        final List<dynamic> value = snapshot.data!;
                         return ListView.builder(
                           itemCount: value.length,
                           itemBuilder: (context, index) {
@@ -42,10 +42,10 @@ class VerticalList extends StatelessWidget {
                                 child: Row(
                                   children: [
                                     (location == "download")
-                                        ? Image.file(File(value[index].image))
+                                        ? Image.file(File(value[index].imgUrl))
                                         : FadeInImage.assetNetwork(
                                       placeholder: 'assets/images/img9.png',
-                                      image: "${value[index].image}",
+                                      image: "${value[index].imgUrl}",
                                       width: 80,
                                     ),
                                     (location == "download")?

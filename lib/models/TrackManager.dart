@@ -3,11 +3,14 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:http/http.dart' as http;
+import 'package:music/models/Tracker.dart';
 import 'package:music/services/firebase_track_service.dart';
+import 'package:music/services/firebase_tracker_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:music/screens/gallery.dart';
@@ -16,26 +19,34 @@ import 'RapidTrack.dart';
 
 class TrackManager {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final FirebaseSong _firebaseSong = FirebaseSong();
+  final FirebaseTracker _firebaseTracker = FirebaseTracker();
+
   late final Future<List<Track>> _dataRecommendTrack;
   late Future<List<Track>> _dataLocal;
   late final Future<List<Track>> _dataPlaylists;
   late Future <List<Song>> _dataPlaylistsFromFirebase;
-  final FirebaseSong _firebaseSong = FirebaseSong();
+  late Future<List<Song>> _dataFavorite;
+
+  late List<Song> _favorite = [];
+  List<Track> _tracks = [];
+  List<Track> _download = [];
+  List<Track> _playlists = [];
+  List<Song> _songs = [];
+
+
+  late String _localAudio;
+  bool _isSlected = false;
+  bool _isLike = false;
   late int _currentTrack;
   bool _isPlaying = true;
   bool _isLoop = false;
   double _volume = 1.0;
   final ValueNotifier<Duration> _positionNotifier =
-      ValueNotifier(Duration.zero);
+  ValueNotifier(Duration.zero);
   Duration _duration = Duration.zero;
   final ValueNotifier<bool> _isLoading = ValueNotifier(false);
-  List<Track> _tracks = [];
-  List<Track> _download = [];
-  List<Track> _playlists = [];
-  List<Song> _songs = [];
-  late String _localAudio;
-  bool _isSlected = false;
-  bool _isLike = false;
+
 
   Future<List<Track>> getPlaylistTracks() async {
     String id = '37i9dQZF1DX4Wsb4d7NKfP';
@@ -159,14 +170,35 @@ class TrackManager {
     }
   }
 
+  Future<List<Song>> getFavoriteList()async{
+    Tracker? tracker = await _firebaseTracker.getUser(FirebaseAuth.instance.currentUser!.uid);
+    _favorite.clear();
+
+    for(var i in tracker!.likes){
+      Song? song = await _firebaseSong.getSong(i);
+      if(song!= null){
+        _favorite.add(song);
+        print(song.name);
+      }
+    }
+    return _favorite;
+  }
+
   TrackManager() {
     _dataRecommendTrack = getRecommendTrack();
     _dataLocal = getPlaylistFromFolder();
     _dataPlaylists = getPlaylistTracks();
     _dataPlaylistsFromFirebase = _firebaseSong.getSongsFromCollection("playlists");
+    _dataFavorite = getFavoriteList();
     getTracks();
   }
 
+
+  Future<List<Song>> get dataFavorite => _dataFavorite;
+
+  set dataFavorite(Future<List<Song>> value) {
+    _dataFavorite = value;
+  }
 
   bool get isLike => _isLike;
 
@@ -405,6 +437,44 @@ class TrackManager {
         print("Đã phát hết danh sách");
       }
     }
+    else if (manager.localAudio == "favorite") {
+      if (id >= 0 && id < _favorite.length) {
+        String standardName =
+        _playlists[id].name.replaceAll(RegExp(r'[^\w\-_\.]'), '_');
+        standardName = standardName.replaceAll(RegExp(r'\.{2,}'), '.');
+        if (standardName.startsWith('.')) {
+          standardName = standardName.substring(1);
+        }
+        if (standardName.endsWith('.')) {
+          standardName = standardName.substring(0, standardName.length - 1);
+        }
+        bool isDownloaded = await findTrackInDevice(standardName);
+        print("ooooooooooooooooooooooooooooo$isDownloaded");
+        if (_isPlaying) {
+          if (isDownloaded) {
+            _isLoading.value = false;
+            await _audioPlayer.play(DeviceFileSource(
+                "storage/emulated/0/Android/data/com.example.music/files/${standardName}.mp3"));
+            _currentTrack = id;
+          } else {
+            _isLoading.value = true;
+            Source source = UrlSource(_favorite[id].mp3Url);
+            positionNotifier.value = Duration.zero;
+            await _audioPlayer.setSource(source);
+            await _audioPlayer.play(source);
+            if (_audioPlayer.state == PlayerState.playing) {
+              _currentTrack = id;
+              _isLoading.value = false;
+            }
+          }
+        } else {
+          _audioPlayer.pause();
+          _currentTrack = id;
+        }
+      } else {
+        print("Đã phát hết danh sách");
+      }
+    }
   }
 
   Future<bool> findTrackInDevice(String trackName) async {
@@ -506,6 +576,8 @@ class TrackManager {
         return manager.dataPlaylists;
       case "firebase":
         return manager.dataPlaylistsFromFirebase;
+      case "favorite":
+        return manager.dataFavorite;
       default:
         return manager.dataFuture;
     }
