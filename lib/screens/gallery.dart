@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:music/models/TrackManager.dart';
 import 'package:music/services/firebase_tracker_service.dart';
@@ -30,25 +29,37 @@ class GalleryState extends State<Gallery> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
-    _timer = Timer.periodic(Duration(seconds: 5), (Timer timer) {
+      _pageController = PageController();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        manager.getTracks();
+      });
+
+
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
       if (_currentPage < manager.songs.length) {
         _currentPage++;
       } else {
         _currentPage = 0;
       }
-      _pageController.animateToPage(
-        _currentPage,
-        duration: Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
     });
-
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -63,52 +74,54 @@ class GalleryState extends State<Gallery> {
             body: Column(
               children: [
                 SizedBox(
-                  height: 220,
-                  child: FutureBuilder(
-                      future: manager.dataPlaylistsFromFirebase,
-                      builder: (context,snapshot){
-                        if(snapshot.hasData){
-                          return PageView.builder(
-                            controller: _pageController,
-                            itemCount: snapshot.data!.length,
-                            itemBuilder: (context, index) {
-                              return Center(
-                                  child: GestureDetector(
-                                    child: NeuBox(
-                                      child: SizedBox(
-                                          width: 250,
-                                          height: 190,
-                                          child: Image.network(
-                                            snapshot.data![index].imgUrl,
-                                            fit: BoxFit.cover,
-                                          )),
-                                    ),
-                                    onTap: () async {
-                                      manager.isLike = await checkLikes(manager.songs[index].id, FirebaseAuth.instance.currentUser!.uid);
-                                      manager.currentTrack = index;
-                                      manager.localAudio = "firebase";
-                                      setState(() {
-                                        manager.isSlected = true;
-                                      });
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => Player()),
-                                      );
-                                    },
-                                  ));
-                            },
-                          );
-                        }else if(snapshot.hasError){
-                          return Center(
-                            child: Text(snapshot.error.toString()),
-                          );
-                        }else{
-                          return Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                      })
-                ),
+                    height: 220,
+                    child: FutureBuilder(
+                        future: manager.dataPlaylistsFromFirebase,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return PageView.builder(
+                              controller: _pageController,
+                              itemCount: snapshot.data!.length,
+                              itemBuilder: (context, index) {
+                                return Center(
+                                    child: GestureDetector(
+                                  child: NeuBox(
+                                    child: SizedBox(
+                                        width: 250,
+                                        height: 190,
+                                        child: Image.network(
+                                          snapshot.data![index].imgUrl,
+                                          fit: BoxFit.cover,
+                                        )),
+                                  ),
+                                  onTap: () async {
+                                    manager.isLike = await checkLikes(
+                                        manager.songs[index].id,
+                                        FirebaseAuth.instance.currentUser!.uid);
+                                    manager.currentTrack = index;
+                                    manager.localAudio = "firebase";
+                                    setState(() {
+                                      manager.isSlected = true;
+                                    });
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => Player()),
+                                    );
+                                  },
+                                ));
+                              },
+                            );
+                          } else if (snapshot.hasError) {
+                            return Center(
+                              child: Text(snapshot.error.toString()),
+                            );
+                          } else {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                        })),
                 Row(children: [
                   const Text(
                     "Discography",
@@ -155,7 +168,8 @@ class GalleryState extends State<Gallery> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                              builder: (context) => Player()),
+                                              builder: (context) =>
+                                                  const Player()),
                                         );
                                       },
                                       child: SizedBox(
@@ -166,22 +180,23 @@ class GalleryState extends State<Gallery> {
                                             FadeInImage.assetNetwork(
                                               placeholder:
                                                   'assets/images/img9.png',
-                                              image: "${data[i].imgUrl}",
+                                              image: data[i].imgUrl,
                                               width: 80,
                                             ),
                                             SizedBox(
                                               height: 20,
                                               // Giới hạn chiều cao của Text widget
                                               child: Marquee(
-                                                text: "${data[i].name}",
-                                                style: TextStyle(fontSize: 8),
+                                                text: data[i].name,
+                                                style: const TextStyle(
+                                                    fontSize: 8),
                                                 scrollAxis: Axis.horizontal,
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 blankSpace: 20.0,
                                                 velocity: 10.0,
                                                 pauseAfterRound:
-                                                    Duration(seconds: 1),
+                                                    const Duration(seconds: 1),
                                               ),
                                             ),
                                           ],
@@ -286,7 +301,7 @@ class GalleryState extends State<Gallery> {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => Player()));
+                                      builder: (context) => const Player()));
                             },
                             child: Text(
                               manager.tracks[manager.currentTrack].name,
@@ -328,7 +343,7 @@ class GalleryState extends State<Gallery> {
                     ],
                   ),
                 ),
-              BottomBar()
+              const BottomBar()
             ])));
   }
 

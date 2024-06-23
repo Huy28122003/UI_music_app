@@ -16,9 +16,9 @@ class Track {
     _imgUrl = value;
   }
 
-  String get preview_url => _mp3Url;
+  String get mp3Url => _mp3Url;
 
-  set preview_url(String value) {
+  set mp3Url(String value) {
     _mp3Url = value;
   }
 

@@ -82,8 +82,10 @@ class _SignUpState extends State<SignIn> {
               const Text("Don't have an account?"),
               TextButton(
                   onPressed: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => const SignUp()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SignUp()));
                   },
                   child: const Text("Sign up"))
             ],
@@ -100,8 +102,11 @@ class _SignUpState extends State<SignIn> {
     User? user = await _authenService.signInWithEmailAndPassword(
         context, email, password);
     if (user != null) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Gallery()));
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/gallery',
+        (Route<dynamic> route) => false,
+      );
     } else {
       print("Sign in is fail");
     }

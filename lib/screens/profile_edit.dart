@@ -16,6 +16,8 @@ class _ProfilleEditState extends State<ProfileEdit> {
   FirebaseTracker _firebaseTracker = FirebaseTracker();
   TextEditingController _nameController = TextEditingController();
   TextEditingController _ageController = TextEditingController();
+  List<dynamic> _albums = [];
+  List<dynamic> _likes = [];
   String? selectedOption;
   String? userId;
   List<String> options = [
@@ -41,6 +43,8 @@ class _ProfilleEditState extends State<ProfileEdit> {
         if(tracker!.favorite.isNotEmpty){
           selectedOption = tracker?.favorite;
         }
+        _albums = tracker.album;
+        _likes = tracker.likes;
       });
     });
   }
@@ -139,12 +143,13 @@ class _ProfilleEditState extends State<ProfileEdit> {
       String name = _nameController.text;
       String age = _ageController.text;
       String favorite = selectedOption!;
-      Tracker tracker = Tracker(userId!, name, int.parse(age), favorite, [],[]);
-      // print(tracker.id);
-      // print(tracker.name);
-      // print(tracker.age);
-      // print(tracker.favorite);
-      // print(tracker.album.length);
+      Tracker tracker = Tracker(userId!, name, int.parse(age), favorite, _albums,_likes);
+      print(tracker.id);
+      print(tracker.name);
+      print(tracker.age);
+      print(tracker.favorite);
+      print(tracker.album);
+      print(tracker.likes);
       _firebaseTracker.updateUser(tracker);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Update is successful')),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:music/screens/favorite.dart';
 import 'package:music/screens/gallery.dart';
 import 'package:music/widgets/verticalList.dart';
 
@@ -35,7 +34,7 @@ class BottomBar extends StatelessWidget {
           label: 'Profile',
         ),
       ],
-      onTap: (index) {
+      onTap: (index) async {
         switch (index) {
           case 0:
             manager.dataFavorite = manager.getFavoriteList();
@@ -61,6 +60,7 @@ class BottomBar extends StatelessWidget {
             break;
           case 3:
             manager.dataLocal = manager.getPlaylistFromFolder();
+            manager.download  = await manager.dataLocal;
             Navigator.push(
                 context,
                 MaterialPageRoute(

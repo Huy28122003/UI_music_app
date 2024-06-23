@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:music/screens/gallery.dart';
 import 'package:music/screens/player.dart';
+import 'package:music/widgets/bottom_navigation_bar.dart';
 import '../models/RapidTrack.dart';
 import '../widgets/verticalList.dart';
 import 'home.dart';
@@ -21,7 +22,7 @@ class _SearchState extends State<Search> {
     // TODO: implement initState
     super.initState();
     _controller = TextEditingController();
-    tracks = manager.findTrack("");
+    tracks = manager.getListWithName("");
   }
 
   @override
@@ -51,7 +52,7 @@ class _SearchState extends State<Search> {
               ),
               onChanged: (value) {
                 setState(() {
-                  tracks = manager.findTrack(value);
+                  tracks = manager.getListWithName(value);
                 });
               },
             ),
@@ -91,7 +92,7 @@ class _SearchState extends State<Search> {
                           ),
                           onTap: () {
                             manager.localAudio =
-                                manager.findTrackLocation(data[i].name);
+                                manager.getPositionInList(data[i].name);
                             setState(() {
                               manager.isSlected = true;
                             });
@@ -169,62 +170,7 @@ class _SearchState extends State<Search> {
                     ],
                   ),
                 ),
-              BottomNavigationBar(
-                type: BottomNavigationBarType.fixed,
-                items: const <BottomNavigationBarItem>[
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.favorite_border),
-                    label: 'Favorite',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.search),
-                    label: 'Search',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    label: 'Home',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.library_add_check),
-                    label: 'Downloaded',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person),
-                    label: 'Profile',
-                  ),
-                ],
-                onTap: (index) {
-                  switch (index) {
-                    case 0:
-                      print("Favorite item tapped!");
-                      break;
-                    case 1:
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const Search()));
-                      break;
-                    case 2:
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const Home()));
-                      break;
-                    case 3:
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => VerticalList(
-                                  name: "Download",
-                                  data: manager.dataLocal,
-                                  location: "download")));
-                      break;
-                    case 4:
-                      print('Profile item tapped!');
-                      break;
-                  }
-                },
-              ),
+              BottomBar(),
             ])
     ));
   }

@@ -77,7 +77,7 @@ class _PlayerState extends State<Player> {
       child: Scaffold(
         body: (manager.localAudio == "firebase" || manager.localAudio == "favorite")
             ? FutureBuilder(
-                future: manager.getDataFuture(manager.localAudio),
+                future: manager.getDataWithLocation(manager.localAudio),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     final List<Song> data = snapshot.data!;
@@ -279,7 +279,7 @@ class _PlayerState extends State<Player> {
                     return const CircularProgressIndicator();
                   }
                 }) :  FutureBuilder(
-            future: manager.getDataFuture(manager.localAudio),
+            future: manager.getDataWithLocation(manager.localAudio),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 final List<Track> data = snapshot.data!;
@@ -326,7 +326,7 @@ class _PlayerState extends State<Player> {
                             icon: const Icon(Icons.download),
                             onPressed: () {
                               manager.downLoadFile(
-                                  data[manager.currentTrack].preview_url,
+                                  data[manager.currentTrack].mp3Url,
                                   data[manager.currentTrack].name,
                                   data[manager.currentTrack].imgUrl);
                             },
