@@ -12,7 +12,6 @@ import 'player.dart';
 import 'package:marquee/marquee.dart';
 
 TrackManager manager = TrackManager();
-
 class Gallery extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -33,8 +32,6 @@ class GalleryState extends State<Gallery> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         manager.getTracks();
       });
-
-
   }
 
   @override
@@ -169,7 +166,7 @@ class GalleryState extends State<Gallery> {
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
-                                                  const Player()),
+                                                   Player()),
                                         );
                                       },
                                       child: SizedBox(

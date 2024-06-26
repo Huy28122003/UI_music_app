@@ -49,6 +49,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.19"
+  audio_video_progress_bar:
+    dependency: "direct main"
+    description:
+      name: audio_video_progress_bar
+      sha256: "552b1f73c56c4c88407999e0a8507176f60c56de3e6d63bc20a0eab48467d4c9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.3"
   audioplayers:
     dependency: "direct main"
     description:
@@ -464,6 +472,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.7"
+  just_audio:
+    dependency: "direct main"
+    description:
+      name: just_audio
+      sha256: "5abfab1d199e01ab5beffa61b3e782350df5dad036cb8c83b79fa45fc656614e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.9.38"
+  just_audio_background:
+    dependency: "direct main"
+    description:
+      name: just_audio_background
+      sha256: "0a8815284b22756d447c9d616d6c4c022dfcc390f23814b637ef891e51279c69"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1-beta.12"
+  just_audio_platform_interface:
+    dependency: transitive
+    description:
+      name: just_audio_platform_interface
+      sha256: "0243828cce503c8366cc2090cefb2b3c871aa8ed2f520670d76fd47aa1ab2790"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.3.0"
+  just_audio_web:
+    dependency: transitive
+    description:
+      name: just_audio_web
+      sha256: "0edb481ad4aa1ff38f8c40f1a3576013c3420bf6669b686fe661627d49bc606c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.11"
   lints:
     dependency: transitive
     description:

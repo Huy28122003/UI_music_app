@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
 class AutoLogin extends StatefulWidget {
   const AutoLogin({super.key});
 
@@ -17,7 +16,7 @@ class _AutoLoginState extends State<AutoLogin> {
 
   Future<void> _checkAndLogin() async {
     if (await _checkLoginStatus()) {
-        Navigator.pushReplacementNamed(context, '/gallery');
+        Navigator.pushReplacementNamed(context, '/library');
     } else {
       Navigator.pushReplacementNamed(context, '/home');
     }

@@ -49,28 +49,6 @@ class _HomeState extends State<Home> {
               )
             ],
           ),
-          Container(
-            margin: const EdgeInsets.only(top: 20),
-            child: SizedBox(
-              width: 230,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => Gallery()));
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepOrange,
-                ),
-                child: const Text(
-                  "Get started",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ),
-          ),
           ElevatedButton(
             onPressed: () {
               Navigator.push(

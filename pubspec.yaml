@@ -48,6 +48,9 @@ dependencies:
   cloud_firestore: ^4.15.8
   random_string: ^2.3.1
   audio_service: ^0.18.13
+  just_audio: ^0.9.38
+  just_audio_background: ^0.0.1-beta.12
+  audio_video_progress_bar: ^2.0.3
 
 
 dev_dependencies:

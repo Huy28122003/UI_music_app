@@ -104,7 +104,7 @@ class _SignUpState extends State<SignIn> {
     if (user != null) {
       Navigator.pushNamedAndRemoveUntil(
         context,
-        '/gallery',
+        '/library',
         (Route<dynamic> route) => false,
       );
     } else {
