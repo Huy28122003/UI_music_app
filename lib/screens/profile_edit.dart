@@ -137,7 +137,6 @@ class _ProfilleEditState extends State<ProfileEdit> {
                   }),
             )));
   }
-
   void updateRequestToFirebase() {
     try {
       String name = _nameController.text;

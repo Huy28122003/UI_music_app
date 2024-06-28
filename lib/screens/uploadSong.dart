@@ -7,7 +7,6 @@ import 'package:music/models/Tracker.dart';
 import 'package:music/services/firebase_track_service.dart';
 import 'package:music/services/firebase_tracker_service.dart';
 import 'package:random_string/random_string.dart';
-
 import '../models/FirebaseTrack.dart';
 
 class UploadScreen extends StatefulWidget {
@@ -29,55 +28,64 @@ class _UploadScreenState extends State<UploadScreen> {
   Future<void> _pickAudioFile() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickMedia();
-    setState(() {
-      _audioFile = pickedFile;
-      _isAudioSelected = true;
-    });
+    if (pickedFile != null) {
+      setState(() {
+        _audioFile = pickedFile;
+        _isAudioSelected = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Audio file selected: ${pickedFile.name}')),
+      );
+    }
   }
 
   Future<void> _pickImageFile() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    setState(() {
-      _imageFile = pickedFile;
-      _isImageSelected = true;
-    });
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = pickedFile;
+        _isImageSelected = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Image file selected: ${pickedFile.name}')),
+      );
+    }
   }
 
-  Future<String> _uploadFile(
-      XFile? file, String storagePath, String contentType) async {
-    if (file == null) {
-      return "";
-    } else {
-      try {
+  Future<String> _uploadFile(XFile? file, String storagePath, String contentType) async {
+    if (file == null) return "";
+
+    try {
+      setState(() {
+        _isUploading = true;
+      });
+
+      final firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance.ref(storagePath);
+      final metadata = firebase_storage.SettableMetadata(contentType: contentType);
+      final uploadTask = ref.putFile(File(file.path), metadata);
+
+      uploadTask.snapshotEvents.listen((snapshot) {
         setState(() {
-          _isUploading = true;
+          _uploadProgress = snapshot.bytesTransferred / snapshot.totalBytes;
         });
+      });
 
-        final firebase_storage.Reference ref =
-            firebase_storage.FirebaseStorage.instance.ref(storagePath);
-        final metadata =
-            firebase_storage.SettableMetadata(contentType: contentType);
-        final uploadTask = ref.putFile(File(file.path), metadata);
-
-        uploadTask.snapshotEvents.listen((snapshot) {
-          setState(() {
-            _uploadProgress = snapshot.bytesTransferred / snapshot.totalBytes;
-          });
-        });
-
-        await uploadTask;
-        final downloadURL = await ref.getDownloadURL();
-        print('File đã được tải ên: $downloadURL');
-        return downloadURL;
-      } catch (e) {
-        print('Lỗi khi tải lên file: $e');
-      } finally {
-        setState(() {
-          _isUploading = false;
-          _uploadProgress = 0.0;
-        });
-      }
+      await uploadTask;
+      final downloadURL = await ref.getDownloadURL();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('File uploaded: $downloadURL')),
+      );
+      return downloadURL;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error uploading file: $e')),
+      );
+    } finally {
+      setState(() {
+        _isUploading = false;
+        _uploadProgress = 0.0;
+      });
     }
     return "";
   }
@@ -86,103 +94,137 @@ class _UploadScreenState extends State<UploadScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Upload my song'),
+        title: const Text('Upload My Song'),
+        backgroundColor: Colors.deepPurple,
       ),
-      body: Center(
+      body: Container(
+        color: Colors.deepPurple.shade50,
+        child: Center(
           child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                _pickAudioFile();
-              },
-              child: const Text('Chọn file nhạc'),
-            ),
-            SizedBox(
-              width: 100,
-              height: 100,
-              child: GestureDetector(
-                child: (_isImageSelected)
-                    ? Image.file(
-                        File(_imageFile!.path),
-                        fit: BoxFit.contain,
-                      )
-                    : Image.asset("assets/images/img4.png"),
-                onTap: () {
-                  _pickImageFile();
-                },
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.all(20.0),
-              child: TextField(
-                controller: _trackNameController,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide.none,
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _pickAudioFile,
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.deepPurple,
+                    onPrimary: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: const BorderSide(color: Colors.blue),
+                  child: const Text('Select Audio File'),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: _pickImageFile,
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12.0),
+                      image: _isImageSelected
+                          ? DecorationImage(
+                        image: FileImage(File(_imageFile!.path)),
+                        fit: BoxFit.cover,
+                      )
+                          : const DecorationImage(
+                        image: AssetImage("assets/images/img4.png"),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (_audioFile != null && _imageFile != null && !_isUploading) {
-                  User? user = FirebaseAuth.instance.currentUser;
-                  Tracker? tracker = await _firebaseTracker.getUser(user!.uid);
-                  print(tracker?.name);
-                  if (tracker?.name.length == 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Vui lòng cập nhật tên trong hồ sơ')),
-                    );
-                  } else if (_trackNameController.text.length == 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Vui lòng nhập đủ thông tin')),
-                    );
-                  } else {
-                    String mp3Url = await _uploadFile(
-                        _audioFile, 'mp3/${_audioFile!.name}', "audio/mpeg");
-                    String imgUrl = await _uploadFile(
-                        _imageFile, 'image/${_imageFile!.name}', "image/png");
-                    String docId = randomAlphaNumeric(20);
-                    Song song = Song(
-                        user.uid,
-                        _trackNameController.text.toString(),
-                        imgUrl,
-                        mp3Url,
-                        0);
-                    _song.addSong(song, docId);
-                    try {
-                      _firebaseTracker.addSongToAlbum(docId, user.uid);
-                    } catch (e) {
-                      print(e);
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _trackNameController,
+                  decoration: InputDecoration(
+                    labelText: 'Track Name',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: const BorderSide(color: Colors.deepPurple),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_audioFile != null && _imageFile != null && !_isUploading) {
+                      User? user = FirebaseAuth.instance.currentUser;
+                      Tracker? tracker = await _firebaseTracker.getUser(user!.uid);
+
+                      if (tracker?.name.isEmpty ?? true) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please update your profile name')),
+                        );
+                      } else if (_trackNameController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please enter track name')),
+                        );
+                      } else {
+                        String mp3Url = await _uploadFile(_audioFile, 'mp3/${_audioFile!.name}', "audio/mpeg");
+                        String imgUrl = await _uploadFile(_imageFile, 'image/${_imageFile!.name}', "image/png");
+                        String docId = randomAlphaNumeric(20);
+                        Song song = Song(user.uid, _trackNameController.text, imgUrl, mp3Url, 0);
+
+                        _song.addSong(song, docId);
+                        try {
+                          _firebaseTracker.addSongToAlbum(docId, user.uid);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Song uploaded successfully')),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error adding song to album: $e')),
+                          );
+                        }
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Incomplete information')),
+                      );
                     }
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Chưa đủ thông tin")),
-                  );
-                }
-              },
-              child: const Text('Confirm'),
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.deepPurple,
+                    onPrimary: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                  child: const Text('Confirm'),
+                ),
+                if (_isUploading)
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      children: [
+                        LinearProgressIndicator(
+                          value: _uploadProgress,
+                          backgroundColor: Colors.deepPurple.shade100,
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          '${(_uploadProgress * 100).toStringAsFixed(2)}% uploaded',
+                          style: const TextStyle(color: Colors.deepPurple),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
-            if (_isUploading)
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: LinearProgressIndicator(value: _uploadProgress),
-              ),
-          ],
+          ),
         ),
-      )),
+      ),
     );
   }
 }

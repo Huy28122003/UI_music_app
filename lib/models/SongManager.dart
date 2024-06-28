@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:just_audio/just_audio.dart';
@@ -19,11 +18,13 @@ class SongManager {
   final FirebaseTracker _firebaseTracker = FirebaseTracker();
   late Future<List<Song>> _dataFavorite;
   late Future<List<Song>> _dataPlaylists;
+  late Future<List<Song>> _dataDownloads;
 
   late List<Song> _playlists = [];
   late List<Song> _favorite = [];
+  late List<Song> _downloads = [];
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer _audioPlayer = AudioPlayer();
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   Duration _bufferedPosition = Duration.zero;
@@ -33,7 +34,7 @@ class SongManager {
   late String _localSong;
   int _numberSong = -1;
   late String _playState;
-
+  late bool _isSelected = false;
   Future<List<Song>> getFavoriteList() async {
     Tracker? tracker =
         await _firebaseTracker.getUser(FirebaseAuth.instance.currentUser!.uid);
@@ -49,15 +50,78 @@ class SongManager {
     return _favorite;
   }
 
+  Future<List<Song>> getPlaylistFromFolder() async {
+    final status = await Permission.storage.request();
+    if (status.isGranted) {
+      final baseStorage = await getExternalStorageDirectory();
+      List<FileSystemEntity> files = await baseStorage!.list().toList();
+      List<File> mp3Files = files
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.mp3'))
+          .toList();
+      List<File> imgFiles = files
+          .whereType<File>()
+          .where((file) => file.path.endsWith('.png'))
+          .toList();
+      List<Map<String, String>> listImg = [];
+      for (int i = 0; i < imgFiles.length; i++) {
+        String imgName =
+            imgFiles[i].path.substring(imgFiles[i].path.lastIndexOf('/') + 1);
+        String imgPath = imgFiles[i].path;
+        listImg.add({
+          'name': imgName,
+          'path': imgPath,
+        });
+      }
+
+      List<Song> list = [];
+      for (int i = 0; i < mp3Files.length; i++) {
+        String name =
+            mp3Files[i].path.substring(mp3Files[i].path.lastIndexOf('/') + 1);
+        String preview_url = mp3Files[i].path;
+        for (var img in listImg) {
+          var imgName = img['name'];
+          if (imgName != null &&
+              imgName.substring(0, imgName.length - 4) ==
+                  name.substring(0, name.length - 4)) {
+            var imgPath = img['path'];
+            if (imgPath != null) {
+              String image = imgPath;
+              Song newTrack = Song(
+                  "",
+                  name.substring(0, name.length - 4),
+                  image.substring(0, image.length - 4),
+                  preview_url.substring(0, preview_url.length - 4),
+                  0);
+              list.add(newTrack);
+              break;
+            }
+          }
+        }
+      }
+      return list;
+    } else {
+      return [];
+    }
+  }
+
   SongManager() {
+    // _dataDownloads = getPlaylistFromFolder();
     _dataFavorite = getFavoriteList();
     _dataPlaylists = _firebaseSong.getSongsFromCollection("playlists");
     getData();
   }
 
   void getData() async {
+    // _downloads = await _dataDownloads;
     _favorite = await _dataFavorite;
     _playlists = await _dataPlaylists;
+  }
+
+  Future<List<Song>> get dataDownloads => _dataDownloads;
+
+  set dataDownloads(Future<List<Song>> value) {
+    _dataDownloads = value;
   }
 
   List<Song> get favorite => _favorite;
@@ -116,23 +180,58 @@ class SongManager {
     _numberSong = value;
   }
 
+  set dataFavorite(Future<List<Song>> value) {
+    _dataFavorite = value;
+  }
+
   AudioPlayer get audioPlayer => _audioPlayer;
+
+  List<Song> get downloads => _downloads;
+
+  set downloads(List<Song> value) {
+    _downloads = value;
+  }
+
+  bool get isSelected => _isSelected;
+
+  set isSelected(bool value) {
+    _isSelected = value;
+  }
 
   Future<List<Song>>? getDataWithLocal() {
     if (localSong == "playlists") {
       return _dataPlaylists;
+    } else if (localSong == "favorite") {
+      return _dataFavorite;
+    } else if (localSong == "download") {
+      return _dataDownloads;
     } else {
       return null;
     }
   }
 
   Future<void> prepare() async {
+    _isSelected = true;
     if (localSong != currentLocal) {
-      if(_audioPlayer.audioSource != null) {
-        _audioPlayer.dispose();
+      _audioPlayer.dispose();
+
+      if (currentLocal != "") {
+        numberSong = -1;
+        position = Duration.zero;
+        duration = Duration.zero;
+        bufferedPosition = Duration.zero;
       }
-      await _audioPlayer
-          .setAudioSource(await manager.createPlaylist(manager.playlists));
+      _audioPlayer = AudioPlayer();
+      if (localSong == "playlists") {
+        await _audioPlayer
+            .setAudioSource(await manager.createPlaylist(manager.playlists));
+      } else if (localSong == "favorite") {
+        await _audioPlayer
+            .setAudioSource(await manager.createPlaylist(manager.favorite));
+      } else if (localSong == "download") {
+        await _audioPlayer
+            .setAudioSource(await manager.createPlaylist(manager.downloads));
+      }
       currentLocal = localSong;
     }
     if (currentSong != numberSong) {
@@ -141,8 +240,6 @@ class SongManager {
       _duration = Duration.zero;
       manager.audioPlayer.seek(Duration.zero, index: manager.currentSong);
       numberSong = currentSong;
-    } else {
-      manager.audioPlayer.seek(position, index: manager.currentSong);
     }
   }
 
@@ -164,7 +261,6 @@ class SongManager {
         ),
       ));
     }
-
     return ConcatenatingAudioSource(children: audioSources);
   }
 
@@ -234,5 +330,20 @@ class SongManager {
     } else {
       return "";
     }
+  }
+
+  Future<List<Song>> getListWithName(String name) async {
+    List<Song> result = [];
+    _playlists.forEach((element) {
+      if (element.name.toLowerCase().contains(name)) {
+        result.add(element);
+      }
+    });
+    return result;
+  }
+
+  int getPositionInList(String name) {
+    return _playlists.indexWhere(
+        (element) => element.name.toLowerCase() == name.toLowerCase());
   }
 }

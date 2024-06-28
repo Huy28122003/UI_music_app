@@ -34,6 +34,8 @@ class GalleryState extends State<Gallery> {
       });
   }
 
+
+
   @override
   void didChangeDependencies() {
     // TODO: implement didChangeDependencies
