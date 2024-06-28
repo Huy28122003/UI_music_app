@@ -78,10 +78,12 @@ class _ProfileState extends State<Profile> {
                   title: const Text("Log out"),
                   onTap: () {
                     manager.audioPlayer.dispose();
+                    manager.isSelected = false;
                     FirebaseAuth.instance.signOut();
-                    Navigator.pushReplacement(
+                    Navigator.pushNamedAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => const SignIn()),
+                      '/signIn',
+                          (Route<dynamic> route) => false,
                     );
                   },
                 ),

@@ -136,8 +136,11 @@ class _SignUpState extends State<SignUp> {
       isSigning = false;
     });
     if (user != null) {
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => Library()));
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/library',
+            (Route<dynamic> route) => false,
+      );
     } else {
       print("Sing up is fail");
     }

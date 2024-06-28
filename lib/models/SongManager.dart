@@ -23,6 +23,7 @@ class SongManager {
   late List<Song> _playlists = [];
   late List<Song> _favorite = [];
   late List<Song> _downloads = [];
+  late List<Song> _hot = [];
 
   AudioPlayer _audioPlayer = AudioPlayer();
   Duration _duration = Duration.zero;
@@ -35,6 +36,7 @@ class SongManager {
   int _numberSong = -1;
   late String _playState;
   late bool _isSelected = false;
+  late bool _isLike;
   Future<List<Song>> getFavoriteList() async {
     Tracker? tracker =
         await _firebaseTracker.getUser(FirebaseAuth.instance.currentUser!.uid);
@@ -116,6 +118,15 @@ class SongManager {
     // _downloads = await _dataDownloads;
     _favorite = await _dataFavorite;
     _playlists = await _dataPlaylists;
+    // _hot = _playlists.toList();
+    // _hot.sort((a,b)=>(b.likes).compareTo(a.likes));
+    //
+    // for(var i in playlists){
+    //   print(i.likes);
+    // }
+    // for(var i in _hot){
+    //   print(i.likes);
+    // }
   }
 
   Future<List<Song>> get dataDownloads => _dataDownloads;
@@ -192,6 +203,12 @@ class SongManager {
     _downloads = value;
   }
 
+  bool get isLike => _isLike;
+
+  set isLike(bool value) {
+    _isLike = value;
+  }
+
   bool get isSelected => _isSelected;
 
   set isSelected(bool value) {
@@ -211,6 +228,9 @@ class SongManager {
   }
 
   Future<void> prepare() async {
+    _favorite = await getFavoriteList();
+    getData();
+    List<Song> local = [];
     _isSelected = true;
     if (localSong != currentLocal) {
       _audioPlayer.dispose();
@@ -225,10 +245,13 @@ class SongManager {
       if (localSong == "playlists") {
         await _audioPlayer
             .setAudioSource(await manager.createPlaylist(manager.playlists));
+        local = playlists;
       } else if (localSong == "favorite") {
         await _audioPlayer
             .setAudioSource(await manager.createPlaylist(manager.favorite));
+        local = favorite;
       } else if (localSong == "download") {
+        local = [];
         await _audioPlayer
             .setAudioSource(await manager.createPlaylist(manager.downloads));
       }
@@ -241,6 +264,22 @@ class SongManager {
       manager.audioPlayer.seek(Duration.zero, index: manager.currentSong);
       numberSong = currentSong;
     }
+    isLike = false;
+    if(local.isEmpty){
+      isLike=false;
+    }
+    else{
+      for(var i in favorite){
+        print(i.id);
+        print( local[currentSong].id);
+        if(i.id == local[currentSong].id) {
+          isLike = true;
+          break;
+        }
+      }
+    }
+
+
   }
 
   Future<ConcatenatingAudioSource> createPlaylist(List<Song> songs) async {

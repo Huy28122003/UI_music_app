@@ -2,6 +2,7 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:music/screens/gallery.dart';
 import 'package:music/screens/library.dart';
+import 'package:music/screens/signIn.dart';
 import 'package:music/services/auto_login_service.dart';
 import 'screens/home.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +30,8 @@ void main() async {
       home: const AutoLogin(),
     routes: {
       '/home': (context) => const Home(),
-      '/library': (context) =>  Library()
+      '/library': (context) =>  Library(),
+      '/signIn': (context) => SignIn()
     },
   )
   );

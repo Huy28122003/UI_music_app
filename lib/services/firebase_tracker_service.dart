@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:music/screens/gallery.dart';
 import '../models/Tracker.dart';
+import '../screens/library.dart';
 
 class FirebaseTracker {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

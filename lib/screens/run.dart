@@ -7,6 +7,8 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:marquee/marquee.dart';
 import 'package:music/models/SongManager.dart';
+import 'package:music/services/firebase_track_service.dart';
+import 'package:music/services/firebase_tracker_service.dart';
 import 'package:music/widgets/box.dart';
 import 'library.dart';
 
@@ -18,6 +20,8 @@ class Run extends StatefulWidget {
 }
 
 class _RunState extends State<Run> {
+  FirebaseTracker _firebaseTracker = FirebaseTracker();
+  FirebaseSong _firebaseSong = FirebaseSong();
   bool _showVolume = false;
   final ReceivePort _port = ReceivePort();
 
@@ -58,7 +62,8 @@ class _RunState extends State<Run> {
   @override
   void initState() {
     super.initState();
-    IsolateNameServer.registerPortWithName(_port.sendPort, 'downloader_send_port');
+    IsolateNameServer.registerPortWithName(
+        _port.sendPort, 'downloader_send_port');
     _port.listen((dynamic data) {
       setState(() {});
     });
@@ -95,37 +100,31 @@ class _RunState extends State<Run> {
                         borderRadius: BorderRadius.circular(10.0),
                         child: (manager.localSong == "download")
                             ? Image.file(
-                          File("${data[manager.currentSong].imgUrl}.png"),
-                          height: 200,
-                          width: 200,
-                          fit: BoxFit.cover,
-                        )
+                                File("${data[manager.currentSong].imgUrl}.png"),
+                                height: 200,
+                                width: 200,
+                                fit: BoxFit.cover,
+                              )
                             : Image.network(
-                          data[manager.currentSong].imgUrl,
-                          height: 200,
-                          width: 200,
-                          fit: BoxFit.cover,
-                        ),
+                                data[manager.currentSong].imgUrl,
+                                height: 200,
+                                width: 200,
+                                fit: BoxFit.cover,
+                              ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     Container(
                       height: 30, // Adjust the height as needed
-                      child: Marquee(
+                      child:  Marquee(
                         text: data[manager.currentSong].name,
                         style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            fontSize: 24, color: Colors.amber),
+                        velocity: 10.0,
+                        blankSpace: 20.0,
                         scrollAxis: Axis.horizontal,
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        blankSpace: 20.0,
-                        velocity: 100.0,
-                        startPadding: 10.0,
-                        accelerationDuration: const Duration(seconds: 1),
-                        accelerationCurve: Curves.linear,
-                        decelerationDuration: const Duration(seconds: 1),
-                        decelerationCurve: Curves.easeOut,
+                        pauseAfterRound: const Duration(seconds: 1),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -144,6 +143,26 @@ class _RunState extends State<Run> {
                           iconSize: 30,
                         ),
                         IconButton(
+                          onPressed: (manager.localSong == "download") ?null: () async {
+                            setState(() {
+                              manager.isLike = !manager.isLike;
+                            });
+                            _firebaseSong
+                                .updateToLikes(data[manager.currentSong].id);
+                            _firebaseTracker.updateSongToLikes(
+                                data[manager.currentSong].id);
+                          },
+                          icon: (manager.isLike)
+                              ? const Icon(
+                                  Icons.favorite,
+                                  color: Colors.yellow,
+                                )
+                              : const Icon(
+                                  Icons.favorite_border,
+                                  color: Colors.black,
+                                ),
+                        ),
+                        IconButton(
                           onPressed: () {},
                           icon: const Icon(Icons.access_alarm_outlined),
                           iconSize: 30,
@@ -159,7 +178,6 @@ class _RunState extends State<Run> {
                         manager.audioPlayer.seek(duration);
                       },
                     ),
-
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -167,7 +185,8 @@ class _RunState extends State<Run> {
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              if (manager.audioPlayer.loopMode == LoopMode.one) {
+                              if (manager.audioPlayer.loopMode ==
+                                  LoopMode.one) {
                                 manager.audioPlayer.setLoopMode(LoopMode.off);
                               } else {
                                 manager.audioPlayer.setLoopMode(LoopMode.one);
@@ -181,8 +200,8 @@ class _RunState extends State<Run> {
                           onPressed: () {
                             manager.audioPlayer.seekToPrevious();
                             setState(() {
-                              manager.currentSong =
-                                  manager.audioPlayer.sequenceState!.currentIndex;
+                              manager.currentSong = manager
+                                  .audioPlayer.sequenceState!.currentIndex;
                             });
                           },
                           icon: const Icon(
@@ -194,7 +213,8 @@ class _RunState extends State<Run> {
                           stream: manager.audioPlayer.playerStateStream,
                           builder: (context, snapshot) {
                             final playerState = snapshot.data;
-                            final processingState = playerState?.processingState;
+                            final processingState =
+                                playerState?.processingState;
                             if (processingState == ProcessingState.loading ||
                                 processingState == ProcessingState.buffering) {
                               return const CircularProgressIndicator();
@@ -219,8 +239,8 @@ class _RunState extends State<Run> {
                           onPressed: () {
                             manager.audioPlayer.seekToNext();
                             setState(() {
-                              manager.currentSong =
-                                  manager.audioPlayer.sequenceState!.currentIndex;
+                              manager.currentSong = manager
+                                  .audioPlayer.sequenceState!.currentIndex;
                             });
                           },
                           icon: const Icon(

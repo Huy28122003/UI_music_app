@@ -53,7 +53,7 @@ class _BottomBarState extends State<BottomBar> {
                                 builder: (context) => const Run()));
                       },
                       child: Text(
-                          "${manager.audioPlayer.sequenceState!.currentSource?.tag.title}"),
+                          "${manager.audioPlayer.sequenceState?.currentSource?.tag.title}"),
                     )),
                     StreamBuilder<PlayerState>(
                       stream: manager.audioPlayer.playerStateStream,
@@ -135,8 +135,11 @@ class _BottomBarState extends State<BottomBar> {
                     MaterialPageRoute(builder: (context) => const Search()));
                 break;
               case 2:
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => const Library()));
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/library',
+                      (Route<dynamic> route) => false,
+                );
                 break;
               case 3:
                 manager.dataDownloads = manager.getPlaylistFromFolder();
