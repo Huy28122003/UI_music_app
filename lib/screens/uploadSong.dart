@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:music/models/Tracker.dart';
+import 'package:music/screens/library.dart';
 import 'package:music/services/firebase_track_service.dart';
 import 'package:music/services/firebase_tracker_service.dart';
 import 'package:random_string/random_string.dart';
@@ -15,6 +16,7 @@ class UploadScreen extends StatefulWidget {
 }
 
 class _UploadScreenState extends State<UploadScreen> {
+  FirebaseSong _firebaseSong = FirebaseSong();
   XFile? _audioFile;
   XFile? _imageFile;
   bool _isUploading = false;
@@ -181,6 +183,8 @@ class _UploadScreenState extends State<UploadScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Song uploaded successfully')),
                           );
+                          manager.dataPlaylists = _firebaseSong.getSongsFromCollection("playlists");
+                          manager.playlists = await manager.dataPlaylists;
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error adding song to album: $e')),
@@ -194,8 +198,6 @@ class _UploadScreenState extends State<UploadScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    primary: Colors.deepPurple,
-                    onPrimary: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),

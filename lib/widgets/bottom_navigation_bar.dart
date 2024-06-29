@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:music/services/firebase_track_service.dart';
 import 'package:music/widgets/verticalList.dart';
 import '../screens/library.dart';
 import '../screens/profile.dart';
@@ -15,6 +16,8 @@ class BottomBar extends StatefulWidget {
 }
 
 class _BottomBarState extends State<BottomBar> {
+  FirebaseSong _firebaseSong = FirebaseSong();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -24,12 +27,6 @@ class _BottomBarState extends State<BottomBar> {
         setState(() {});
       }
     });
-  }
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
   }
 
   @override
@@ -122,6 +119,7 @@ class _BottomBarState extends State<BottomBar> {
             switch (index) {
               case 0:
                 manager.dataFavorite = manager.getFavoriteList();
+                manager.favorite = await manager.dataFavorite;
                 Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -140,6 +138,10 @@ class _BottomBarState extends State<BottomBar> {
                   '/library',
                       (Route<dynamic> route) => false,
                 );
+                manager.dataPlaylists = _firebaseSong.getSongsFromCollection("playlists");
+                manager.playlists = await manager.dataPlaylists;
+                manager.dataFavorite = manager.getFavoriteList();
+                manager.favorite = await manager.dataFavorite;
                 break;
               case 3:
                 manager.dataDownloads = manager.getPlaylistFromFolder();

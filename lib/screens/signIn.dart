@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:music/screens/gallery.dart';
 import 'package:music/screens/signUp.dart';
 import 'package:music/services/firebase_authen_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -102,13 +102,48 @@ class _SignUpState extends State<SignIn> {
     User? user = await _authenService.signInWithEmailAndPassword(
         context, email, password);
     if (user != null) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/library',
-        (Route<dynamic> route) => false,
-      );
+      _showConfirmationDialog();
     } else {
       print("Sign in is fail");
     }
+  }
+
+  void _showConfirmationDialog() async{
+    // final SharedPreferences prefs = await SharedPreferences.getInstance();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Lưu thông tin đăng nhập"),
+          content: const Text("Thông tin sẽ được lưu vào thiết bị!"),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+
+                Navigator.of(context).pop();
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/library',
+                  (Route<dynamic> route) => false,
+                );
+              },
+              child: Text("Hủy"),
+            ),
+            TextButton(
+              onPressed: () {
+                // prefs.setString(_emailController.toString(), _passwordController.toString());
+                Navigator.of(context).pop(); // Đóng hộp thoại
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/library',
+                  (Route<dynamic> route) => false,
+                );
+              },
+              child: Text("Xác nhận"),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

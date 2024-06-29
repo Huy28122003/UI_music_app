@@ -29,7 +29,7 @@ class _LibraryState extends State<Library> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
-      if (_currentPage < manager.favorite.length - 1) {
+      if (_currentPage < 4) {
         _currentPage++;
       } else {
         _currentPage = 0;
@@ -56,7 +56,7 @@ class _LibraryState extends State<Library> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Library"),
+          title: const Text("L i b r a r y"),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -64,47 +64,36 @@ class _LibraryState extends State<Library> {
             children: [
               SizedBox(
                 height: 200,
-                child: FutureBuilder(
-                  future: manager.dataFavorite,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return PageView.builder(
-                        controller: _pageController,
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) {
-                          return Center(
-                            child: GestureDetector(
-                              child: NeuBox(
-                                child: SizedBox(
-                                  width: 250,
-                                  height: 150,
-                                  child: Image.network(
-                                    snapshot.data![index].imgUrl,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              onTap: () async {
-                                manager.currentSong = index;
-                                manager.localSong = "favorite";
-                                await manager.prepare();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => Run()),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      );
-                    } else if (snapshot.hasError) {
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: 5,
+                  itemBuilder: (context, index) {
+                    if (index < manager.hot.length) {
                       return Center(
-                        child: Text(snapshot.error.toString()),
+                        child: GestureDetector(
+                          child: NeuBox(
+                            child: SizedBox(
+                              width: 250,
+                              height: 150,
+                              child: Image.network(
+                                manager.hot[index].imgUrl,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          onTap: () async {
+                            manager.currentSong = index;
+                            manager.localSong = "hot";
+                            await manager.prepare();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => Run()),
+                            );
+                          },
+                        ),
                       );
                     } else {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const SizedBox.shrink(); // Trả về một SizedBox trống nếu index không hợp lệ
                     }
                   },
                 ),

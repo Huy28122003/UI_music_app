@@ -70,6 +70,10 @@ class _RunState extends State<Run> {
     FlutterDownloader.registerCallback(SongManager.downloadCallback);
     run();
     _registerListeners();
+    manager.isLike = false;
+    manager.isLike = manager.favorite.any((song) =>
+        song.id == manager.audioPlayer.sequenceState!.currentSource!.tag.id);
+    manager.isSelected = true;
   }
 
   @override
@@ -84,7 +88,7 @@ class _RunState extends State<Run> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Runner"),
+          title: const Text("R u n n e r"),
         ),
         body: FutureBuilder(
           future: manager.getDataWithLocal(),
@@ -116,10 +120,10 @@ class _RunState extends State<Run> {
                     const SizedBox(height: 16),
                     Container(
                       height: 30, // Adjust the height as needed
-                      child:  Marquee(
+                      child: Marquee(
                         text: data[manager.currentSong].name,
-                        style: const TextStyle(
-                            fontSize: 24, color: Colors.amber),
+                        style:
+                            const TextStyle(fontSize: 24, color: Colors.amber),
                         velocity: 10.0,
                         blankSpace: 20.0,
                         scrollAxis: Axis.horizontal,
@@ -143,15 +147,20 @@ class _RunState extends State<Run> {
                           iconSize: 30,
                         ),
                         IconButton(
-                          onPressed: (manager.localSong == "download") ?null: () async {
-                            setState(() {
-                              manager.isLike = !manager.isLike;
-                            });
-                            _firebaseSong
-                                .updateToLikes(data[manager.currentSong].id);
-                            _firebaseTracker.updateSongToLikes(
-                                data[manager.currentSong].id);
-                          },
+                          onPressed: (manager.localSong == "download")
+                              ? null
+                              : () async {
+                                  setState(() {
+                                    manager.isLike = !manager.isLike;
+                                  });
+                                  _firebaseSong.updateToLikes(
+                                      data[manager.currentSong].id);
+                                  _firebaseTracker.updateSongToLikes(
+                                      data[manager.currentSong].id);
+                                  manager.dataFavorite =
+                                      manager.getFavoriteList();
+                                  manager.favorite = await manager.dataFavorite;
+                                },
                           icon: (manager.isLike)
                               ? const Icon(
                                   Icons.favorite,

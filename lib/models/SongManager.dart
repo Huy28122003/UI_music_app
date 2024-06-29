@@ -19,13 +19,14 @@ class SongManager {
   late Future<List<Song>> _dataFavorite;
   late Future<List<Song>> _dataPlaylists;
   late Future<List<Song>> _dataDownloads;
+  late Future<List<Song>> _dataHot;
 
   late List<Song> _playlists = [];
   late List<Song> _favorite = [];
   late List<Song> _downloads = [];
   late List<Song> _hot = [];
 
-  AudioPlayer _audioPlayer = AudioPlayer();
+  late AudioPlayer _audioPlayer;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   Duration _bufferedPosition = Duration.zero;
@@ -36,7 +37,7 @@ class SongManager {
   int _numberSong = -1;
   late String _playState;
   late bool _isSelected = false;
-  late bool _isLike;
+  late bool _isLike = false;
   Future<List<Song>> getFavoriteList() async {
     Tracker? tracker =
         await _firebaseTracker.getUser(FirebaseAuth.instance.currentUser!.uid);
@@ -46,7 +47,7 @@ class SongManager {
       Song? song = await _firebaseSong.getSong(i);
       if (song != null) {
         _favorite.add(song);
-        print(song.name);
+        // print(song.name);
       }
     }
     return _favorite;
@@ -108,25 +109,28 @@ class SongManager {
   }
 
   SongManager() {
-    // _dataDownloads = getPlaylistFromFolder();
+    _audioPlayer = AudioPlayer();
     _dataFavorite = getFavoriteList();
     _dataPlaylists = _firebaseSong.getSongsFromCollection("playlists");
     getData();
   }
 
   void getData() async {
-    // _downloads = await _dataDownloads;
     _favorite = await _dataFavorite;
     _playlists = await _dataPlaylists;
-    // _hot = _playlists.toList();
-    // _hot.sort((a,b)=>(b.likes).compareTo(a.likes));
-    //
-    // for(var i in playlists){
-    //   print(i.likes);
-    // }
-    // for(var i in _hot){
-    //   print(i.likes);
-    // }
+    _hot = _playlists.toList();
+    _hot.sort((a,b)=>(b.likes).compareTo(a.likes));
+    _dataHot = Future.value(_hot);
+  }
+
+  List<Song> get hot => _hot;
+
+  set hot(List<Song> value) {
+    _hot = value;
+  }
+
+  set dataPlaylists(Future<List<Song>> value) {
+    _dataPlaylists = value;
   }
 
   Future<List<Song>> get dataDownloads => _dataDownloads;
@@ -215,6 +219,15 @@ class SongManager {
     _isSelected = value;
   }
 
+  set favorite(List<Song> value) {
+    _favorite = value;
+  }
+  set playlists(List<Song> value) {
+    _playlists = value;
+  }
+
+  Future<List<Song>> get dataHot => _dataHot;
+
   Future<List<Song>>? getDataWithLocal() {
     if (localSong == "playlists") {
       return _dataPlaylists;
@@ -222,16 +235,14 @@ class SongManager {
       return _dataFavorite;
     } else if (localSong == "download") {
       return _dataDownloads;
-    } else {
+    } else if(localSong == "hot"){
+      return _dataHot;
+    }else {
       return null;
     }
   }
 
   Future<void> prepare() async {
-    _favorite = await getFavoriteList();
-    getData();
-    List<Song> local = [];
-    _isSelected = true;
     if (localSong != currentLocal) {
       _audioPlayer.dispose();
 
@@ -245,15 +256,16 @@ class SongManager {
       if (localSong == "playlists") {
         await _audioPlayer
             .setAudioSource(await manager.createPlaylist(manager.playlists));
-        local = playlists;
       } else if (localSong == "favorite") {
         await _audioPlayer
             .setAudioSource(await manager.createPlaylist(manager.favorite));
-        local = favorite;
       } else if (localSong == "download") {
-        local = [];
         await _audioPlayer
             .setAudioSource(await manager.createPlaylist(manager.downloads));
+      }
+      else if(localSong == "hot"){
+        await _audioPlayer
+            .setAudioSource(await manager.createPlaylist(manager.hot));
       }
       currentLocal = localSong;
     }
@@ -264,22 +276,6 @@ class SongManager {
       manager.audioPlayer.seek(Duration.zero, index: manager.currentSong);
       numberSong = currentSong;
     }
-    isLike = false;
-    if(local.isEmpty){
-      isLike=false;
-    }
-    else{
-      for(var i in favorite){
-        print(i.id);
-        print( local[currentSong].id);
-        if(i.id == local[currentSong].id) {
-          isLike = true;
-          break;
-        }
-      }
-    }
-
-
   }
 
   Future<ConcatenatingAudioSource> createPlaylist(List<Song> songs) async {
@@ -385,4 +381,5 @@ class SongManager {
     return _playlists.indexWhere(
         (element) => element.name.toLowerCase() == name.toLowerCase());
   }
+
 }
