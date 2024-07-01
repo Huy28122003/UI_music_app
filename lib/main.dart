@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:just_audio_background/just_audio_background.dart';
@@ -7,7 +6,6 @@ import 'package:music/screens/library.dart';
 import 'package:music/screens/signIn.dart';
 import 'package:music/services/auto_login_service.dart';
 import 'package:music/services/firebase_push_notification_message_service.dart';
-import 'package:music/services/googleapis_httpv1_service.dart';
 import 'screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -57,7 +55,6 @@ void main() async {
     }
   });
 
-  print("${await HTTPv1Service.getAccessToken()} pppppppp");
   runApp(MaterialApp(
     navigatorKey: navigatorKey,
     theme: ThemeData(brightness: Brightness.light),
