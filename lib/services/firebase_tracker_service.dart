@@ -70,7 +70,7 @@ class FirebaseTracker {
     final List<String> fcm = [];
     for (final documentSnapshot in querySnapshot.docs) {
       final data = documentSnapshot.data();
-      print(data['fcmToken']);
+      fcm.add(data['fcmToken'] as String);
     }
     return fcm;
   }

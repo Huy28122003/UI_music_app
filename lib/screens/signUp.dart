@@ -37,7 +37,7 @@ class _SignUpState extends State<SignUp> {
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
-        title: Text("Sign up"),
+        title: const Text("Sign up"),
       ),
       body: SingleChildScrollView(
         child: Column(
