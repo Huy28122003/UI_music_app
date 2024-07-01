@@ -56,8 +56,8 @@ class HTTPv1Service {
     print("fcmkey : $currentFCMToken");
     final Map<String, dynamic> message = {
       'message': {
-        'token':
-            "d34IcBcMQV6hNFdSaQkp3V:APA91bFhNtyWnA2P5GmNmt0ENj_Xyo4On4PJMaO_HL3vpO_A4NqUNLuYN-FhAiYcV9Nvt7oLK4yaWYNhiNC0be0pvw_fPMcWSabFzFO8k0zokxxKUzQhMu4HZ1dojEWHTH2_7FcvzVzZ",
+        'token':'a',
+            // "d34IcBcMQV6hNFdSaQkp3V:APA91bFhNtyWnA2P5GmNmt0ENj_Xyo4On4PJMaO_HL3vpO_A4NqUNLuYN-FhAiYcV9Nvt7oLK4yaWYNhiNC0be0pvw_fPMcWSabFzFO8k0zokxxKUzQhMu4HZ1dojEWHTH2_7FcvzVzZ",
         // Token of the device you want to send the message to
         'notification': {
           'body': 'This is an FCM notification message!',
