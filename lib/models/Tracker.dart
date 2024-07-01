@@ -5,8 +5,10 @@ class Tracker {
   String _favorite;
   List<dynamic> _album;
   List<dynamic> _likes;
+  String _fcmToken = "";
 
-  Tracker(this._id, this._name, this._age, this._favorite, this._album,this._likes);
+  Tracker(this._id, this._name, this._age, this._favorite, this._album,
+      this._likes);
 
   String get id => _id;
 
@@ -14,9 +16,15 @@ class Tracker {
     _id = value;
   }
 
-  factory Tracker.fromMap(Map<String, dynamic> map,String userId) {
-    return Tracker(userId, map['name'] as String, map['age'] as int,
-        map['favorite'] as String, map['album'] as List<dynamic>,map['likes'] as List<dynamic>);
+  factory Tracker.fromMap(Map<String, dynamic> map, String userId) {
+    return Tracker(
+      userId,
+      map['name'] as String,
+      map['age'] as int,
+      map['favorite'] as String,
+      map['album'] as List<dynamic>,
+      map['likes'] as List<dynamic>,
+    );
   }
 
   Map<String, dynamic> toMap() {
@@ -28,7 +36,6 @@ class Tracker {
       'likes': _likes
     };
   }
-
 
   List<dynamic> get likes => _likes;
 

@@ -52,6 +52,10 @@ dependencies:
   just_audio_background: ^0.0.1-beta.12
   audio_video_progress_bar: ^2.0.3
   shared_preferences: ^2.2.3
+  firebase_messaging: ^14.7.19
+  flutter_local_notifications: ^17.2.1
+  googleapis: ^13.1.0
+  googleapis_auth: ^1.6.0
 
 
 dev_dependencies:

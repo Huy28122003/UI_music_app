@@ -16,7 +16,7 @@ class FirebaseTracker {
   }
 
   // add user to Firebase
-    Future<void> addUser(Tracker tracker) async {
+  Future<void> addUser(Tracker tracker) async {
     await _firestore.collection('users').doc(tracker.id).set(tracker.toMap());
   }
 
@@ -31,31 +31,47 @@ class FirebaseTracker {
   }
 
   // add song to album on firebase
-  Future<void> addSongToAlbum(String songID,String userID) async {
+  Future<void> addSongToAlbum(String songID, String userID) async {
     _firestore.collection("users").doc(userID).update({
       'album': FieldValue.arrayUnion([songID])
     });
   }
 
- Future<void> updateSongToLikes(String songID)async {
+  Future<void> updateSongToLikes(String songID) async {
     String userID = FirebaseAuth.instance.currentUser!.uid;
     print(songID);
     print(userID);
     print(manager.isLike);
-   try{
-     if(manager.isLike){
-       _firestore.collection("users").doc(userID).update({
-         'likes': FieldValue.arrayUnion([songID])
-       });
-     }
-     else{
-       _firestore.collection("users").doc(userID).update({
-         'likes': FieldValue.arrayRemove([songID])
-       });
-     }
-   }catch(e){
-     print("$e llllllllll");
-   }
+    try {
+      if (manager.isLike) {
+        _firestore.collection("users").doc(userID).update({
+          'likes': FieldValue.arrayUnion([songID])
+        });
+      } else {
+        _firestore.collection("users").doc(userID).update({
+          'likes': FieldValue.arrayRemove([songID])
+        });
+      }
+    } catch (e) {
+      print("$e llllllllll");
+    }
+  }
 
- }
+  Future<void> updateToken(String fcm) async {
+    String userID = FirebaseAuth.instance.currentUser!.uid;
+    _firestore.collection("users").doc(userID).update({
+      'fcmToken': fcm
+    });
+  }
+  Future<List<String>> getFcmToken() async {
+    final collectionReference = _firestore.collection("users");
+    final querySnapshot = await collectionReference.get();
+
+    final List<String> fcm = [];
+    for (final documentSnapshot in querySnapshot.docs) {
+      final data = documentSnapshot.data();
+      print(data['fcmToken']);
+    }
+    return fcm;
+  }
 }

@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:music/models/SongManager.dart';
 import 'package:music/screens/run.dart';
+import 'package:music/services/firebase_push_notification_message_service.dart';
+import 'package:music/services/firebase_tracker_service.dart';
 import 'package:music/widgets/bottom_navigation_bar.dart';
 import 'package:music/widgets/box.dart';
 
@@ -23,6 +26,18 @@ class _LibraryState extends State<Library> {
   void initState() {
     super.initState();
     _pageController = PageController();
+    set();
+  }
+  void set() async{
+    String fcmToken = await MessagingService().getTokenDevices();
+    // print(fcmToken);
+    // print(FirebaseAuth.instance.currentUser!.uid);
+    try {
+      FirebaseTracker().updateToken(fcmToken);
+    }catch(e){
+      print("Loi cap nhat fcmToken $e");
+    }
+    FirebaseTracker().getFcmToken();
   }
 
   @override
@@ -148,7 +163,7 @@ class _LibraryState extends State<Library> {
             ],
           ),
         ),
-        bottomNavigationBar: BottomBar(),
+        bottomNavigationBar: const BottomBar(),
       ),
     );
   }

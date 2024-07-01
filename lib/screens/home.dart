@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:music/screens/signIn.dart';
+import 'package:music/services/firebase_authen_service.dart';
+import 'package:music/services/firebase_push_notification_message_service.dart';
 import './gallery.dart';
 
 class Home extends StatefulWidget {
@@ -16,6 +18,7 @@ class _HomeState extends State<Home> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    MessagingService().initNotification();
   }
 
   @override
