@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:music/models/SongManager.dart';
 import 'package:music/screens/run.dart';
-import 'package:music/services/firebase_push_notification_message_service.dart';
+import 'package:music/services/receive_cloud_messaging_service.dart';
 import 'package:music/services/firebase_tracker_service.dart';
 import 'package:music/widgets/bottom_navigation_bar.dart';
 import 'package:music/widgets/box.dart';
@@ -68,6 +71,14 @@ class _LibraryState extends State<Library> {
 
   @override
   Widget build(BuildContext context) {
+    Map payload = {};
+    final data = ModalRoute.of(context)!.settings.arguments;
+    if(data is RemoteMessage){
+      payload = data.data;
+    }
+    else if(data is NotificationResponse){
+      payload = jsonDecode(data.payload!);
+    }
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -119,6 +130,13 @@ class _LibraryState extends State<Library> {
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       final data = snapshot.data!;
+                      if(payload != null) {
+                        int indexToMove = data.indexWhere((song) => song.id == payload['songId']);
+                        if (indexToMove != -1) {
+                          final songToMove = data.removeAt(indexToMove);
+                          data.insert(0, songToMove);
+                        }
+                      }
                       return ListView.builder(
                         itemCount: data.length,
                         itemBuilder: (context, index) {

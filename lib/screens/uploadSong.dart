@@ -7,6 +7,7 @@ import 'package:music/models/Tracker.dart';
 import 'package:music/screens/library.dart';
 import 'package:music/services/firebase_track_service.dart';
 import 'package:music/services/firebase_tracker_service.dart';
+import 'package:music/services/httpv1_send_messaging_service.dart';
 import 'package:random_string/random_string.dart';
 import '../models/FirebaseTrack.dart';
 
@@ -55,7 +56,8 @@ class _UploadScreenState extends State<UploadScreen> {
     }
   }
 
-  Future<String> _uploadFile(XFile? file, String storagePath, String contentType) async {
+  Future<String> _uploadFile(
+      XFile? file, String storagePath, String contentType) async {
     if (file == null) return "";
 
     try {
@@ -63,8 +65,10 @@ class _UploadScreenState extends State<UploadScreen> {
         _isUploading = true;
       });
 
-      final firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance.ref(storagePath);
-      final metadata = firebase_storage.SettableMetadata(contentType: contentType);
+      final firebase_storage.Reference ref =
+          firebase_storage.FirebaseStorage.instance.ref(storagePath);
+      final metadata =
+          firebase_storage.SettableMetadata(contentType: contentType);
       final uploadTask = ref.putFile(File(file.path), metadata);
 
       uploadTask.snapshotEvents.listen((snapshot) {
@@ -129,13 +133,13 @@ class _UploadScreenState extends State<UploadScreen> {
                       borderRadius: BorderRadius.circular(12.0),
                       image: _isImageSelected
                           ? DecorationImage(
-                        image: FileImage(File(_imageFile!.path)),
-                        fit: BoxFit.cover,
-                      )
+                              image: FileImage(File(_imageFile!.path)),
+                              fit: BoxFit.cover,
+                            )
                           : const DecorationImage(
-                        image: AssetImage("assets/images/img4.png"),
-                        fit: BoxFit.cover,
-                      ),
+                              image: AssetImage("assets/images/img4.png"),
+                              fit: BoxFit.cover,
+                            ),
                     ),
                   ),
                 ),
@@ -159,35 +163,50 @@ class _UploadScreenState extends State<UploadScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
-                    if (_audioFile != null && _imageFile != null && !_isUploading) {
+                    if (_audioFile != null &&
+                        _imageFile != null &&
+                        !_isUploading) {
                       User? user = FirebaseAuth.instance.currentUser;
-                      Tracker? tracker = await _firebaseTracker.getUser(user!.uid);
+                      Tracker? tracker =
+                          await _firebaseTracker.getUser(user!.uid);
 
                       if (tracker?.name.isEmpty ?? true) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please update your profile name')),
+                          const SnackBar(
+                              content: Text('Please update your profile name')),
                         );
                       } else if (_trackNameController.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter track name')),
+                          const SnackBar(
+                              content: Text('Please enter track name')),
                         );
                       } else {
-                        String mp3Url = await _uploadFile(_audioFile, 'mp3/${_audioFile!.name}', "audio/mpeg");
-                        String imgUrl = await _uploadFile(_imageFile, 'image/${_imageFile!.name}', "image/png");
+                        String mp3Url = await _uploadFile(_audioFile,
+                            'mp3/${_audioFile!.name}', "audio/mpeg");
+                        String imgUrl = await _uploadFile(_imageFile,
+                            'image/${_imageFile!.name}', "image/png");
                         String docId = randomAlphaNumeric(20);
-                        Song song = Song(user.uid, _trackNameController.text, imgUrl, mp3Url, 0);
+                        Song song = Song(user.uid, _trackNameController.text,
+                            imgUrl, mp3Url, 0);
 
                         _song.addSong(song, docId);
                         try {
                           _firebaseTracker.addSongToAlbum(docId, user.uid);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Song uploaded successfully')),
+                            const SnackBar(
+                                content: Text('Song uploaded successfully')),
                           );
-                          manager.dataPlaylists = _firebaseSong.getSongsFromCollection("playlists");
+
+                          HTTPv1Service().sendFCMMessage("A new interesting song",
+                              _trackNameController.text.toString(), docId);
+                          manager.dataPlaylists =
+                              _firebaseSong.getSongsFromCollection("playlists");
                           manager.playlists = await manager.dataPlaylists;
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error adding song to album: $e')),
+                            SnackBar(
+                                content:
+                                    Text('Error adding song to album: $e')),
                           );
                         }
                       }
@@ -212,7 +231,8 @@ class _UploadScreenState extends State<UploadScreen> {
                         LinearProgressIndicator(
                           value: _uploadProgress,
                           backgroundColor: Colors.deepPurple.shade100,
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              Colors.deepPurple),
                         ),
                         const SizedBox(height: 10),
                         Text(

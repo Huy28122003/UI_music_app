@@ -5,7 +5,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:music/screens/library.dart';
 import 'package:music/screens/signIn.dart';
 import 'package:music/services/auto_login_service.dart';
-import 'package:music/services/firebase_push_notification_message_service.dart';
+import 'package:music/services/receive_cloud_messaging_service.dart';
 import 'screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -15,7 +15,8 @@ final navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> _receiveNotification(RemoteMessage remoteMessage) async {
   if (remoteMessage.notification != null) {
-    print("some thing are here");
+    navigatorKey.currentState!
+        .pushNamed('/library', arguments: remoteMessage);
   }
 }
 

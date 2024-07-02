@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart' as auth;
@@ -44,23 +44,22 @@ class HTTPv1Service{
     // Return the access token
     return credentials.accessToken.data;
   }
-  Future<void> sendFCMMessage() async {
+  Future<void> sendFCMMessage(String title,String body,String data) async {
     List<String> fcmToken = await FirebaseTracker().getFcmToken();
     final String serverKey = await getAccessToken() ; // Your FCM server key
-    final String fcmEndpoint = 'https://fcm.googleapis.com/v1/projects/music-6e9f9/messages:send';
-    final  currentFCMToken = await FirebaseMessaging.instance.getToken();
-    print("currently device FCM token   : $currentFCMToken");
+    const String fcmEndpoint = 'https://fcm.googleapis.com/v1/projects/music-6e9f9/messages:send';
     List<String> setFcmToken = fcmToken.toSet().toList();
+    setFcmToken.remove(FirebaseAuth.instance.currentUser!.uid);
     for (var token in setFcmToken) {
       final Map<String, dynamic> message = {
         'message': {
           'token': token,
           'notification': {
-            'body': 'This is an FCM notification message!',
-            'title': 'FCM Message'
+            'body': body,
+            'title': title,
           },
           'data': {
-            'current_user_fcm_token': currentFCMToken,
+            'songId': data
           },
         }
       };

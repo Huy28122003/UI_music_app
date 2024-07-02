@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:music/screens/profile_edit.dart';
 import 'package:music/screens/signIn.dart';
 import 'package:music/screens/uploadSong.dart';
-import 'package:music/services/googleapis_httpv1_service.dart';
+import 'package:music/services/httpv1_send_messaging_service.dart';
 import 'package:music/widgets/bottom_navigation_bar.dart';
 import 'package:music/widgets/verticalList.dart';
 import 'library.dart';
@@ -90,9 +90,9 @@ class _ProfileState extends State<Profile> {
                 ),
               ),
               TextButton(onPressed: (){
-                HTTPv1Service().sendFCMMessage();
+                HTTPv1Service().sendFCMMessage("new","new song added" ,"test");
 
-              }, child:Text("Ok") )
+              }, child:const Text("Ok") )
             ],
           ),
         ),
