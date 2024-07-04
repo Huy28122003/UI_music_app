@@ -41,14 +41,15 @@ void main() async {
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage remoteMessage) {
     if (remoteMessage.notification != null) {
       print("Notification is tapped");
-      print(remoteMessage.data);
+      navigatorKey.currentState!
+          .pushNamed('/library', arguments: remoteMessage);
     }
   });
 
   FirebaseMessaging.onMessage.listen((RemoteMessage remoteMessage) {
     if (remoteMessage.notification != null) {
       final payload = jsonEncode(remoteMessage.data);
-      print("foreground notification");
+      print("foreground from notification");
       MessagingService.showSimpleNotification(
           title: remoteMessage.notification!.title!,
           body: remoteMessage.notification!.body!,

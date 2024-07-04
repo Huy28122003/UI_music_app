@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music/services/firebase_track_service.dart';
 import 'package:music/widgets/verticalList.dart';
-import '../screens/library.dart';
 import '../screens/profile.dart';
 import '../screens/run.dart';
 import '../screens/search.dart';
+import '../services/auto_login_service.dart';
 
 class BottomBar extends StatefulWidget {
   const BottomBar({super.key});
@@ -118,14 +118,14 @@ class _BottomBarState extends State<BottomBar> {
           onTap: (index) async {
             switch (index) {
               case 0:
-                manager.dataFavorite = manager.getFavoriteList();
-                manager.favorite = await manager.dataFavorite;
+                // manager.dataFavorite = manager.getFavoriteList();
+                // manager.favorite = await manager.dataFavorite;
                 Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => VerticalList(
                             name: "Favorites",
-                            data: manager.dataFavorite,
+                            data: manager.favorite,
                             location: "favorite")));
                 break;
               case 1:
@@ -138,20 +138,19 @@ class _BottomBarState extends State<BottomBar> {
                   '/library',
                       (Route<dynamic> route) => false,
                 );
-                manager.dataPlaylists = _firebaseSong.getSongsFromCollection("playlists");
-                manager.playlists = await manager.dataPlaylists;
-                manager.dataFavorite = manager.getFavoriteList();
-                manager.favorite = await manager.dataFavorite;
+                // manager.dataPlaylists = _firebaseSong.getSongsFromCollection("playlists");
+                // manager.playlists = await manager.dataPlaylists;
+                // manager.dataFavorite = manager.getFavoriteList();
+                // manager.favorite = await manager.dataFavorite;
                 break;
               case 3:
-                manager.dataDownloads = manager.getPlaylistFromFolder();
-                manager.downloads = await manager.dataDownloads;
+
                 Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => VerticalList(
                             name: "Download",
-                            data: manager.dataDownloads,
+                            data: manager.downloads,
                             location: "download")));
                 break;
               case 4:

@@ -1,12 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:music/screens/profile_edit.dart';
-import 'package:music/screens/signIn.dart';
 import 'package:music/screens/uploadSong.dart';
 import 'package:music/services/httpv1_send_messaging_service.dart';
 import 'package:music/widgets/bottom_navigation_bar.dart';
 import 'package:music/widgets/verticalList.dart';
-import 'library.dart';
+import '../services/auto_login_service.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -30,7 +29,7 @@ class _ProfileState extends State<Profile> {
             children: [
               Card(
                 child: ListTile(
-                  leading: Icon(Icons.music_note, color: Colors.blue),
+                  leading: const Icon(Icons.music_note, color: Colors.blue),
                   title: const Text("Upload Song"),
                   onTap: () {
                     Navigator.push(
@@ -40,10 +39,10 @@ class _ProfileState extends State<Profile> {
                   },
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Card(
                 child: ListTile(
-                  leading: Icon(Icons.favorite, color: Colors.red),
+                  leading: const Icon(Icons.favorite, color: Colors.red),
                   title: const Text("Favorites"),
                   onTap: () {
                     Navigator.push(
@@ -51,7 +50,7 @@ class _ProfileState extends State<Profile> {
                       MaterialPageRoute(
                         builder: (context) => VerticalList(
                           name: "Favorites",
-                          data: manager.dataFavorite,
+                          data: manager.favorite,
                           location: "favorite",
                         ),
                       ),
@@ -59,10 +58,10 @@ class _ProfileState extends State<Profile> {
                   },
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Card(
                 child: ListTile(
-                  leading: Icon(Icons.edit, color: Colors.orange),
+                  leading: const Icon(Icons.edit, color: Colors.orange),
                   title: const Text("Edit Profile"),
                   onTap: () {
                     Navigator.push(
@@ -72,10 +71,10 @@ class _ProfileState extends State<Profile> {
                   },
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Card(
                 child: ListTile(
-                  leading: Icon(Icons.logout, color: Colors.black),
+                  leading: const Icon(Icons.logout, color: Colors.black),
                   title: const Text("Log out"),
                   onTap: () {
                     manager.audioPlayer.dispose();

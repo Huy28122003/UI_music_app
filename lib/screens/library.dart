@@ -1,17 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:music/models/SongManager.dart';
+import 'package:music/models/FirebaseTrack.dart';
 import 'package:music/screens/run.dart';
 import 'package:music/services/receive_cloud_messaging_service.dart';
 import 'package:music/services/firebase_tracker_service.dart';
 import 'package:music/widgets/bottom_navigation_bar.dart';
 import 'package:music/widgets/box.dart';
-
-SongManager manager = SongManager();
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auto_login_service.dart';
 
 class Library extends StatefulWidget {
   const Library({super.key});
@@ -24,6 +23,9 @@ class _LibraryState extends State<Library> {
   late PageController _pageController;
   int _currentPage = 0;
   late Timer _timer;
+  late Future<SharedPreferences> _sharedPreferences;
+  Map payload = {};
+  List<Song> _data = [];
 
   @override
   void initState() {
@@ -31,16 +33,13 @@ class _LibraryState extends State<Library> {
     _pageController = PageController();
     set();
   }
-  void set() async{
+  void set() async {
     String fcmToken = await MessagingService().getTokenDevices();
-    // print(fcmToken);
-    // print(FirebaseAuth.instance.currentUser!.uid);
     try {
       FirebaseTracker().updateToken(fcmToken);
-    }catch(e){
+    } catch (e) {
       print("Loi cap nhat fcmToken $e");
     }
-    FirebaseTracker().getFcmToken();
   }
 
   @override
@@ -71,13 +70,21 @@ class _LibraryState extends State<Library> {
 
   @override
   Widget build(BuildContext context) {
-    Map payload = {};
-    final data = ModalRoute.of(context)!.settings.arguments;
-    if(data is RemoteMessage){
+    _data = manager.playlists;
+    var data = ModalRoute.of(context)!.settings.arguments;
+    if (data is RemoteMessage) {
       payload = data.data;
-    }
-    else if(data is NotificationResponse){
+    } else if (data is NotificationResponse) {
       payload = jsonDecode(data.payload!);
+    } else if (data == null) {}
+
+    if (payload.isNotEmpty) {
+      int indexToMove =
+          _data.indexWhere((song) => song.id == payload['songId']);
+      if (indexToMove != -1) {
+        final songToMove = _data.removeAt(indexToMove);
+        _data.insert(0, songToMove);
+      }
     }
     return SafeArea(
       child: Scaffold(
@@ -113,71 +120,49 @@ class _LibraryState extends State<Library> {
                             await manager.prepare();
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => Run()),
+                              MaterialPageRoute(
+                                  builder: (context) => const Run()),
                             );
                           },
                         ),
                       );
                     } else {
-                      return const SizedBox.shrink(); // Trả về một SizedBox trống nếu index không hợp lệ
+                      return const SizedBox
+                          .shrink(); // Trả về một SizedBox trống nếu index không hợp lệ
                     }
                   },
                 ),
               ),
               Expanded(
-                child: FutureBuilder(
-                  future: manager.dataPlaylists,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      final data = snapshot.data!;
-                      if(payload != null) {
-                        int indexToMove = data.indexWhere((song) => song.id == payload['songId']);
-                        if (indexToMove != -1) {
-                          final songToMove = data.removeAt(indexToMove);
-                          data.insert(0, songToMove);
-                        }
-                      }
-                      return ListView.builder(
-                        itemCount: data.length,
-                        itemBuilder: (context, index) {
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: ListTile(
-                              leading: FadeInImage.assetNetwork(
-                                placeholder: 'assets/images/img8.png',
-                                image: data[index].imgUrl,
-                                width: 100,
-                                fit: BoxFit.cover,
-                              ),
-                              title: Text(
-                                data[index].name,
-                                softWrap: true,
-                              ),
-                              onTap: () async {
-                                manager.currentSong = index;
-                                manager.localSong = "playlists";
-                                await manager.prepare();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => Run()),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      );
-                    } else if (snapshot.hasError) {
-                      return Center(
-                        child: Text(snapshot.error.toString()),
-                      );
-                    } else {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                  },
-                ),
-              ),
+                  child: ListView.builder(
+                itemCount: _data.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: ListTile(
+                      leading: FadeInImage.assetNetwork(
+                        placeholder: 'assets/images/img8.png',
+                        image: _data[index].imgUrl,
+                        width: 100,
+                        fit: BoxFit.cover,
+                      ),
+                      title: Text(
+                        _data[index].name,
+                        softWrap: true,
+                      ),
+                      onTap: () async {
+                        manager.currentSong = index;
+                        manager.localSong = "playlist";
+                        await manager.prepare();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => Run()),
+                        );
+                      },
+                    ),
+                  );
+                },
+              )),
             ],
           ),
         ),

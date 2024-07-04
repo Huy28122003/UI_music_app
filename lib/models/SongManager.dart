@@ -1,25 +1,16 @@
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:music/models/FirebaseTrack.dart';
-import 'package:music/models/Tracker.dart';
-import 'package:music/screens/library.dart';
-import 'package:music/services/firebase_tracker_service.dart';
+import 'package:music/models/interface_SongDataSource.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../services/firebase_track_service.dart';
 
 class SongManager {
-  final FirebaseSong _firebaseSong = FirebaseSong();
-  final FirebaseTracker _firebaseTracker = FirebaseTracker();
-  late Future<List<Song>> _dataFavorite;
-  late Future<List<Song>> _dataPlaylists;
-  late Future<List<Song>> _dataDownloads;
-  late Future<List<Song>> _dataHot;
+  late SongDataSource _songDataSource;
 
   late List<Song> _playlists = [];
   late List<Song> _favorite = [];
@@ -38,89 +29,42 @@ class SongManager {
   late String _playState;
   late bool _isSelected = false;
   late bool _isLike = false;
-  Future<List<Song>> getFavoriteList() async {
-    Tracker? tracker =
-        await _firebaseTracker.getUser(FirebaseAuth.instance.currentUser!.uid);
-    _favorite.clear();
-
-    for (var i in tracker!.likes) {
-      Song? song = await _firebaseSong.getSong(i);
-      if (song != null) {
-        _favorite.add(song);
-        // print(song.name);
-      }
-    }
-    return _favorite;
-  }
-
-  Future<List<Song>> getPlaylistFromFolder() async {
-    final status = await Permission.storage.request();
-    if (status.isGranted) {
-      final baseStorage = await getExternalStorageDirectory();
-      List<FileSystemEntity> files = await baseStorage!.list().toList();
-      List<File> mp3Files = files
-          .whereType<File>()
-          .where((file) => file.path.endsWith('.mp3'))
-          .toList();
-      List<File> imgFiles = files
-          .whereType<File>()
-          .where((file) => file.path.endsWith('.png'))
-          .toList();
-      List<Map<String, String>> listImg = [];
-      for (int i = 0; i < imgFiles.length; i++) {
-        String imgName =
-            imgFiles[i].path.substring(imgFiles[i].path.lastIndexOf('/') + 1);
-        String imgPath = imgFiles[i].path;
-        listImg.add({
-          'name': imgName,
-          'path': imgPath,
-        });
-      }
-
-      List<Song> list = [];
-      for (int i = 0; i < mp3Files.length; i++) {
-        String name =
-            mp3Files[i].path.substring(mp3Files[i].path.lastIndexOf('/') + 1);
-        String preview_url = mp3Files[i].path;
-        for (var img in listImg) {
-          var imgName = img['name'];
-          if (imgName != null &&
-              imgName.substring(0, imgName.length - 4) ==
-                  name.substring(0, name.length - 4)) {
-            var imgPath = img['path'];
-            if (imgPath != null) {
-              String image = imgPath;
-              Song newTrack = Song(
-                  "",
-                  name.substring(0, name.length - 4),
-                  image.substring(0, image.length - 4),
-                  preview_url.substring(0, preview_url.length - 4),
-                  0);
-              list.add(newTrack);
-              break;
-            }
-          }
-        }
-      }
-      return list;
-    } else {
-      return [];
-    }
-  }
 
   SongManager() {
     _audioPlayer = AudioPlayer();
-    _dataFavorite = getFavoriteList();
-    _dataPlaylists = _firebaseSong.getSongsFromCollection("playlists");
-    getData();
+
+    _songDataSource = SongDataSourceFactory.create('playlist');
+    loadData("playlist");
+
+    _songDataSource = SongDataSourceFactory.create('hot');
+    loadData("hot");
+
+    _songDataSource = SongDataSourceFactory.create('favorite');
+    loadData("favorite");
+
+    _songDataSource = SongDataSourceFactory.create('download');
+    loadData("download");
   }
 
-  void getData() async {
-    _favorite = await _dataFavorite;
-    _playlists = await _dataPlaylists;
-    _hot = _playlists.toList();
-    _hot.sort((a,b)=>(b.likes).compareTo(a.likes));
-    _dataHot = Future.value(_hot);
+  void setDataSource(String value) async {
+    _songDataSource = SongDataSourceFactory.create(value);
+  }
+
+  Future<void> loadData(String position) async {
+    switch (position) {
+      case "hot":
+        _hot = await _songDataSource.getSong();
+        break;
+      case "favorite":
+        _favorite = await _songDataSource.getSong();
+        break;
+      case "playlist":
+        _playlists = await _songDataSource.getSong();
+        break;
+      default:
+        _downloads = await _songDataSource.getSong();
+        break;
+    }
   }
 
   List<Song> get hot => _hot;
@@ -129,21 +73,7 @@ class SongManager {
     _hot = value;
   }
 
-  set dataPlaylists(Future<List<Song>> value) {
-    _dataPlaylists = value;
-  }
-
-  Future<List<Song>> get dataDownloads => _dataDownloads;
-
-  set dataDownloads(Future<List<Song>> value) {
-    _dataDownloads = value;
-  }
-
   List<Song> get favorite => _favorite;
-
-  Future<List<Song>> get dataFavorite => _dataFavorite;
-
-  Future<List<Song>> get dataPlaylists => _dataPlaylists;
 
   List<Song> get playlists => _playlists;
 
@@ -195,10 +125,6 @@ class SongManager {
     _numberSong = value;
   }
 
-  set dataFavorite(Future<List<Song>> value) {
-    _dataFavorite = value;
-  }
-
   AudioPlayer get audioPlayer => _audioPlayer;
 
   List<Song> get downloads => _downloads;
@@ -222,22 +148,21 @@ class SongManager {
   set favorite(List<Song> value) {
     _favorite = value;
   }
+
   set playlists(List<Song> value) {
     _playlists = value;
   }
 
-  Future<List<Song>> get dataHot => _dataHot;
-
-  Future<List<Song>>? getDataWithLocal() {
-    if (localSong == "playlists") {
-      return _dataPlaylists;
+  List<Song>? getDataWithPosition() {
+    if (localSong == "hot") {
+      return _hot;
     } else if (localSong == "favorite") {
-      return _dataFavorite;
+      return _favorite;
     } else if (localSong == "download") {
-      return _dataDownloads;
-    } else if(localSong == "hot"){
-      return _dataHot;
-    }else {
+      return _downloads;
+    } else if (localSong == "playlist") {
+      return _playlists;
+    } else {
       return null;
     }
   }
@@ -253,19 +178,14 @@ class SongManager {
         bufferedPosition = Duration.zero;
       }
       _audioPlayer = AudioPlayer();
-      if (localSong == "playlists") {
-        await _audioPlayer
-            .setAudioSource(await manager.createPlaylist(manager.playlists));
+      if (localSong == "playlist") {
+        await _audioPlayer.setAudioSource(await createPlaylist(playlists));
       } else if (localSong == "favorite") {
-        await _audioPlayer
-            .setAudioSource(await manager.createPlaylist(manager.favorite));
+        await _audioPlayer.setAudioSource(await createPlaylist(favorite));
       } else if (localSong == "download") {
-        await _audioPlayer
-            .setAudioSource(await manager.createPlaylist(manager.downloads));
-      }
-      else if(localSong == "hot"){
-        await _audioPlayer
-            .setAudioSource(await manager.createPlaylist(manager.hot));
+        await _audioPlayer.setAudioSource(await createPlaylist(downloads));
+      } else if (localSong == "hot") {
+        await _audioPlayer.setAudioSource(await createPlaylist(hot));
       }
       currentLocal = localSong;
     }
@@ -273,7 +193,7 @@ class SongManager {
       _position = Duration.zero;
       _bufferedPosition = Duration.zero;
       _duration = Duration.zero;
-      manager.audioPlayer.seek(Duration.zero, index: manager.currentSong);
+      audioPlayer.seek(Duration.zero, index: currentSong);
       numberSong = currentSong;
     }
   }
@@ -381,5 +301,4 @@ class SongManager {
     return _playlists.indexWhere(
         (element) => element.name.toLowerCase() == name.toLowerCase());
   }
-
 }

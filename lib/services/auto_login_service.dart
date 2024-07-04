@@ -1,5 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:music/models/SongManager.dart';
+
+SongManager manager = SongManager();
+
 class AutoLogin extends StatefulWidget {
   const AutoLogin({super.key});
 

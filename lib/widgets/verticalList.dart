@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:music/screens/run.dart';
 import 'package:music/widgets/bottom_navigation_bar.dart';
-import '../screens/library.dart';
+import '../services/auto_login_service.dart';
 
 class VerticalList extends StatelessWidget {
   final String name;
-  final Future<List<dynamic>> data;
+  final List<dynamic> data;
   final String location;
 
   const VerticalList({
@@ -29,57 +29,44 @@ class VerticalList extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: FutureBuilder(
-                  future: data,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      final List<dynamic> value = snapshot.data!;
-                      return ListView.builder(
-                        itemCount: value.length,
-                        itemBuilder: (context, index) {
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: ListTile(
-                              leading: (location == "download")
-                                  ? Image.file(
-                                File("${value[index].imgUrl}.png"),
-                                width: 80,
-                                fit: BoxFit.cover,
-                              )
-                                  : FadeInImage.assetNetwork(
-                                placeholder: 'assets/images/img9.png',
-                                image: "${value[index].imgUrl}",
-                                width: 80,
-                                fit: BoxFit.cover,
-                              ),
-                              title: Text(
-                                value[index].name,
-                                softWrap: true,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onTap: () async {
-                                manager.currentSong = index;
-                                manager.localSong = location;
-                                await manager.prepare();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const Run(),
-                                  ),
-                                );
-                              },
+                  child: ListView.builder(
+                itemCount: data.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: ListTile(
+                      leading: (location == "download")
+                          ? Image.file(
+                              File("${data[index].imgUrl}.png"),
+                              width: 80,
+                              fit: BoxFit.cover,
+                            )
+                          : FadeInImage.assetNetwork(
+                              placeholder: 'assets/images/img9.png',
+                              image: "${data[index].imgUrl}",
+                              width: 80,
+                              fit: BoxFit.cover,
                             ),
-                          );
-                        },
-                      );
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text(snapshot.error.toString()));
-                    } else {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                  },
-                ),
-              ),
+                      title: Text(
+                        data[index].name,
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () async {
+                        manager.currentSong = index;
+                        manager.localSong = location;
+                        await manager.prepare();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const Run(),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              )),
             ],
           ),
         ),

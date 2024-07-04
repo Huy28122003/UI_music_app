@@ -130,14 +130,14 @@ class GalleryState extends State<Gallery> {
                       margin: const EdgeInsets.only(left: 190.0),
                       child: TextButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => VerticalList(
-                                      name: "Discography",
-                                      data: manager.dataFuture,
-                                      location: 'recommendation')),
-                            );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //       builder: (context) => VerticalList(
+                            //           name: "Discography",
+                            //           data: manager.dataFuture,
+                            //           location: 'recommendation')),
+                            // );
                           },
                           child: const Text("See all",
                               style: TextStyle(
@@ -222,14 +222,14 @@ class GalleryState extends State<Gallery> {
                       margin: const EdgeInsets.only(left: 170.0),
                       child: TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => VerticalList(
-                                    name: "Popular singles",
-                                    data: manager.dataPlaylists,
-                                    location: 'popular')),
-                          );
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //       builder: (context) => VerticalList(
+                          //           name: "Popular singles",
+                          //           data: manager.dataPlaylists,
+                          //           location: 'popular')),
+                          // );
                         },
                         child: const Text(
                           "See all",

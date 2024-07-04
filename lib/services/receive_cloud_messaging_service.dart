@@ -1,7 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:music/main.dart';
+import 'package:music/services/auto_login_service.dart';
 
 class MessagingService {
   final _firebaseMessaging = FirebaseMessaging.instance;
@@ -44,9 +44,9 @@ class MessagingService {
         onDidReceiveBackgroundNotificationResponse: onNotificationTap);
   }
 
-  static void onNotificationTap(NotificationResponse notificationResponse) {
-    // print('foreground notification is tapped');
-    // print(notificationResponse.payload);
+  static Future<void> onNotificationTap(NotificationResponse notificationResponse) async {
+    manager.setDataSource("playlist");
+    manager.loadData("playlist");
     navigatorKey.currentState!
         .pushNamed('/library', arguments: notificationResponse);
   }
