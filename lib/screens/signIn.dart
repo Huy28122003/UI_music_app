@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:music/models/SongManager.dart';
 import 'package:music/screens/signUp.dart';
+import 'package:music/services/auto_login_service.dart';
 import 'package:music/services/firebase_authen_service.dart';
 import 'package:music/services/receive_cloud_messaging_service.dart';
 import 'package:music/services/firebase_tracker_service.dart';
@@ -206,6 +208,8 @@ class _SignUpState extends State<SignIn> {
     User? user = await _authenService.signInWithEmailAndPassword(
         context, email, password);
     if (user != null) {
+      manager.setDataSource("favorite");
+      manager.loadData("favorite");
       bool isSave = false;
       for (var i in keys) {
         if (i.keys.toString() == "(${_emailController.text.toString()})") {
@@ -237,7 +241,6 @@ class _SignUpState extends State<SignIn> {
           actions: <Widget>[
             TextButton(
               onPressed: () async {
-
                 Navigator.of(context).pop();
                 Navigator.pushNamedAndRemoveUntil(
                   context,

@@ -74,6 +74,7 @@ class _RunState extends State<Run> {
     FlutterDownloader.registerCallback(SongManager.downloadCallback);
     run();
     _registerListeners();
+
     manager.isLike = false;
     manager.isLike = manager.favorite.any((song) =>
         song.id == manager.audioPlayer.sequenceState!.currentSource!.tag.id);
@@ -156,9 +157,6 @@ class _RunState extends State<Run> {
                           data[manager.currentSong].id);
                       _firebaseTracker.updateSongToLikes(
                           data[manager.currentSong].id);
-                      // manager.dataFavorite =
-                      //     manager.getFavoriteList();
-                      // manager.favorite = await manager.dataFavorite;
                       manager.setDataSource("favorite");
                       manager.loadData("favorite");
 

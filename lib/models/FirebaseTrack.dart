@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Song {
   String  _id= "";
   String _authorID;
@@ -5,12 +7,13 @@ class Song {
   String _imgUrl;
   String _mp3Url;
   int _likes;
+  Timestamp? _createdOn;
 
-  Song(this._authorID, this._name, this._imgUrl, this._mp3Url, this._likes);
+  Song(this._authorID, this._name, this._imgUrl, this._mp3Url, this._likes,this._createdOn);
 
   factory Song.fromMap(Map<String, dynamic> map) {
     return Song(map['authorID'], map['name'], map['imgUrl'],
-        map['mp3Url'],map['likes']);
+        map['mp3Url'],map['likes'],map['createdOn']);
   }
 
   Map<String, dynamic> toMap() {
@@ -19,8 +22,15 @@ class Song {
       'name': _name,
       'likes': _likes,
       'imgUrl': _imgUrl,
-      'mp3Url': _mp3Url
+      'mp3Url': _mp3Url,
+      'createdOn': _createdOn
     };
+  }
+
+  Timestamp get createdOn => _createdOn!;
+
+  set createdOn(Timestamp value) {
+    _createdOn = value;
   }
 
   String get id => _id;

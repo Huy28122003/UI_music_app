@@ -26,10 +26,12 @@ class FirebaseSong {
     final List<Song> songs = [];
     for (final documentSnapshot in querySnapshot.docs) {
       final data = documentSnapshot.data();
+
       final song = Song.fromMap(data);
       song.id = documentSnapshot.id;
       songs.add(song);
     }
+    songs.sort((a, b) => b.createdOn.compareTo(a.createdOn));
     return songs;
   }
 

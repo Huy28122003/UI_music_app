@@ -23,9 +23,7 @@ class _LibraryState extends State<Library> {
   late PageController _pageController;
   int _currentPage = 0;
   late Timer _timer;
-  late Future<SharedPreferences> _sharedPreferences;
   Map payload = {};
-  List<Song> _data = [];
 
   @override
   void initState() {
@@ -33,6 +31,7 @@ class _LibraryState extends State<Library> {
     _pageController = PageController();
     set();
   }
+
   void set() async {
     String fcmToken = await MessagingService().getTokenDevices();
     try {
@@ -70,22 +69,13 @@ class _LibraryState extends State<Library> {
 
   @override
   Widget build(BuildContext context) {
-    _data = manager.playlists;
     var data = ModalRoute.of(context)!.settings.arguments;
     if (data is RemoteMessage) {
       payload = data.data;
     } else if (data is NotificationResponse) {
       payload = jsonDecode(data.payload!);
-    } else if (data == null) {}
-
-    if (payload.isNotEmpty) {
-      int indexToMove =
-          _data.indexWhere((song) => song.id == payload['songId']);
-      if (indexToMove != -1) {
-        final songToMove = _data.removeAt(indexToMove);
-        _data.insert(0, songToMove);
-      }
     }
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -135,19 +125,19 @@ class _LibraryState extends State<Library> {
               ),
               Expanded(
                   child: ListView.builder(
-                itemCount: _data.length,
+                itemCount: manager.playlists.length,
                 itemBuilder: (context, index) {
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 8.0),
                     child: ListTile(
                       leading: FadeInImage.assetNetwork(
                         placeholder: 'assets/images/img8.png',
-                        image: _data[index].imgUrl,
+                        image: manager.playlists[index].imgUrl,
                         width: 100,
                         fit: BoxFit.cover,
                       ),
                       title: Text(
-                        _data[index].name,
+                        manager.playlists[index].name,
                         softWrap: true,
                       ),
                       onTap: () async {

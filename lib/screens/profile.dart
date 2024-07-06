@@ -77,8 +77,7 @@ class _ProfileState extends State<Profile> {
                   leading: const Icon(Icons.logout, color: Colors.black),
                   title: const Text("Log out"),
                   onTap: () {
-                    manager.audioPlayer.dispose();
-                    manager.isSelected = false;
+                    manager.dispose();
                     FirebaseAuth.instance.signOut();
                     Navigator.pushNamedAndRemoveUntil(
                       context,

@@ -5,7 +5,7 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:music/models/FirebaseTrack.dart';
-import 'package:music/models/interface_SongDataSource.dart';
+import 'package:music/models/ISongDataSource.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -46,7 +46,18 @@ class SongManager {
     loadData("download");
   }
 
-  void setDataSource(String value) async {
+  void dispose() {
+    _audioPlayer.dispose();
+    _favorite.clear();
+    _position = Duration.zero;
+    _bufferedPosition = Duration.zero;
+    _duration = Duration.zero;
+    _isSelected = false;
+    _currentSong = -2;
+    _currentLocal = "";
+  }
+
+  void setDataSource(String value) {
     _songDataSource = SongDataSourceFactory.create(value);
   }
 

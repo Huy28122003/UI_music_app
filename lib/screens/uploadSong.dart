@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -187,8 +188,7 @@ class _UploadScreenState extends State<UploadScreen> {
                             'image/${_imageFile!.name}', "image/png");
                         String docId = randomAlphaNumeric(20);
                         Song song = Song(user.uid, _trackNameController.text,
-                            imgUrl, mp3Url, 0);
-
+                            imgUrl, mp3Url, 0,Timestamp.fromDate(DateTime.now()));
                         _song.addSong(song, docId);
                         try {
                           _firebaseTracker.addSongToAlbum(docId, user.uid);
@@ -197,10 +197,17 @@ class _UploadScreenState extends State<UploadScreen> {
                                 content: Text('Song uploaded successfully')),
                           );
 
-                          HTTPv1Service().sendFCMMessage("A new interesting song",
-                              _trackNameController.text.toString(), docId);
+                          HTTPv1Service().sendFCMMessage(
+                              "A new interesting song",
+                              _trackNameController.text.toString(),
+                              docId);
                           manager.setDataSource("playlist");
-                          manager.loadData("playlist");
+                          await manager.loadData("playlist");
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/library',
+                            (Route<dynamic> route) => false,
+                          );
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

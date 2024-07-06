@@ -20,11 +20,12 @@ class _BottomBarState extends State<BottomBar> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     Timer.periodic(Duration(seconds: 1), (timer) {
       if (manager.audioPlayer.playing) {
-        setState(() {});
+        if (mounted) {
+          setState(() {});
+        }
       }
     });
   }
@@ -56,12 +57,9 @@ class _BottomBarState extends State<BottomBar> {
                       stream: manager.audioPlayer.playerStateStream,
                       builder: (context, snapshot) {
                         final playerState = snapshot.data;
-                        final processingState =
-                            playerState?.processingState;
-                        if (processingState ==
-                            ProcessingState.loading ||
-                            processingState ==
-                                ProcessingState.buffering) {
+                        final processingState = playerState?.processingState;
+                        if (processingState == ProcessingState.loading ||
+                            processingState == ProcessingState.buffering) {
                           return const CircularProgressIndicator();
                         } else {
                           return IconButton(
@@ -87,7 +85,6 @@ class _BottomBarState extends State<BottomBar> {
                           manager.duration.inSeconds.toDouble()
                       : 0.0,
                 ),
-
               ],
             ),
           ),
@@ -112,7 +109,7 @@ class _BottomBarState extends State<BottomBar> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
-              label: 'Profile',
+              label: 'User',
             ),
           ],
           onTap: (index) async {
@@ -133,18 +130,15 @@ class _BottomBarState extends State<BottomBar> {
                     MaterialPageRoute(builder: (context) => const Search()));
                 break;
               case 2:
+                manager.setDataSource("playlist");
+                await manager.loadData("playlist");
                 Navigator.pushNamedAndRemoveUntil(
                   context,
                   '/library',
-                      (Route<dynamic> route) => false,
+                  (Route<dynamic> route) => false,
                 );
-                // manager.dataPlaylists = _firebaseSong.getSongsFromCollection("playlists");
-                // manager.playlists = await manager.dataPlaylists;
-                // manager.dataFavorite = manager.getFavoriteList();
-                // manager.favorite = await manager.dataFavorite;
                 break;
               case 3:
-
                 Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -163,6 +157,7 @@ class _BottomBarState extends State<BottomBar> {
       ],
     );
   }
+
   Icon _setIconPlaying() {
     if (manager.audioPlayer.playing) {
       return const Icon(
