@@ -9,8 +9,7 @@ import 'package:music/services/receive_cloud_messaging_service.dart';
 import 'screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-
+import 'package:music/firebase_options.dart';
 final navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> _receiveNotification(RemoteMessage remoteMessage) async {

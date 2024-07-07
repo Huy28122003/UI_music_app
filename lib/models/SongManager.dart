@@ -8,8 +8,9 @@ import 'package:music/models/FirebaseTrack.dart';
 import 'package:music/models/ISongDataSource.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/material.dart';
 
-class SongManager {
+class SongManager extends ChangeNotifier{
   late SongDataSource _songDataSource;
 
   late List<Song> _playlists = [];
@@ -44,6 +45,7 @@ class SongManager {
 
     _songDataSource = SongDataSourceFactory.create('download');
     loadData("download");
+    notifyListeners();
   }
 
   void dispose() {
