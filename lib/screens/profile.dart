@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:music/models/Song.dart';
 import 'package:music/screens/profile_edit.dart';
 import 'package:music/screens/uploadSong.dart';
-import 'package:music/services/httpv1_send_messaging_service.dart';
 import 'package:music/widgets/bottom_navigation_bar.dart';
 import 'package:music/widgets/verticalList.dart';
-import '../services/auto_login_service.dart';
+import 'package:provider/provider.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -46,15 +46,12 @@ class _ProfileState extends State<Profile> {
                   title: const Text("Favorites"),
                   onTap: () {
                     Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => VerticalList(
-                          name: "Favorites",
-                          data: manager.favorite,
-                          location: "favorite",
-                        ),
-                      ),
-                    );
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => VerticalList(
+                                name: "Favorites",
+                                data:  Provider.of<SongProvider>(context, listen: false).favorite,
+                                location: "favorite")));
                   },
                 ),
               ),
@@ -77,7 +74,7 @@ class _ProfileState extends State<Profile> {
                   leading: const Icon(Icons.logout, color: Colors.black),
                   title: const Text("Log out"),
                   onTap: () {
-                    manager.dispose();
+                    // Provider.of<SongProvider>(context, listen: false).dispose();
                     FirebaseAuth.instance.signOut();
                     Navigator.pushNamedAndRemoveUntil(
                       context,
@@ -87,10 +84,6 @@ class _ProfileState extends State<Profile> {
                   },
                 ),
               ),
-              TextButton(onPressed: (){
-                HTTPv1Service().sendFCMMessage("new","new song added" ,"test");
-
-              }, child:const Text("Ok") )
             ],
           ),
         ),

@@ -1,0 +1,496 @@
+// import 'dart:io';
+// import 'dart:isolate';
+// import 'dart:ui';
+// import 'package:audioplayers/audioplayers.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:flutter/material.dart';
+// import 'package:marquee/marquee.dart';
+// import 'package:music/models/TrackManager.dart';
+// import 'package:music/services/firebase_track_service.dart';
+// import 'package:music/services/firebase_tracker_service.dart';
+// import 'package:music/widgets/box.dart';
+// import '../models/FirebaseTrack.dart';
+// import '../models/RapidTrack.dart';
+// import 'package:flutter_downloader/flutter_downloader.dart';
+// import '../models/Tracker.dart';
+// import 'gallery.dart';
+//
+// class Player extends StatefulWidget {
+//   const Player({super.key});
+//
+//   @override
+//   State<StatefulWidget> createState() {
+//     return _PlayerState();
+//   }
+// }
+//
+// class _PlayerState extends State<Player> {
+//   bool isCalled = false;
+//   bool showSetVolume = false;
+//   final ReceivePort _port = ReceivePort();
+//   bool gotId = false;
+//   late int id;
+//   FirebaseTracker _firebaseTracker = FirebaseTracker();
+//   FirebaseSong _firebaseSong = FirebaseSong();
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//
+//     IsolateNameServer.registerPortWithName(
+//         _port.sendPort, 'downloader_send_port');
+//     _port.listen((dynamic data) {
+//       String id = data[0];
+//       int status = data[1];
+//       int progress = data[2];
+//       setState(() {});
+//     });
+//     FlutterDownloader.registerCallback(TrackManager.downloadCallback);
+//
+//     // Thêm listener trạng thái trình phát vào đây
+//     manager.audioPlayer.onPlayerStateChanged.listen((state) async {
+//       if (state == PlayerState.completed) {
+//         manager.positionNotifier.value = Duration.zero;
+//         await manager.playOrpause(manager.currentTrack + 1);
+//         if (mounted) {
+//           setState(() {
+//             isCalled = false;
+//           });
+//         }
+//       }
+//     });
+//
+//     manager.listen();
+//     manager.playOrpause(manager.currentTrack);
+//   }
+//
+//   @override
+//   void dispose() {
+//     super.dispose();
+//     IsolateNameServer.removePortNameMapping('downloader_send_port');
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return SafeArea(
+//       child: Scaffold(
+//         body: (manager.localAudio == "firebase" || manager.localAudio == "favorite")
+//             ? FutureBuilder(
+//                 future: manager.getDataWithLocation(manager.localAudio),
+//                 builder: (context, snapshot) {
+//                   if (snapshot.hasData) {
+//                     final List<Song> data = snapshot.data!;
+//                     return Column(
+//                       //mainAxisAlignment: MainAxisAlignment.center,
+//                       children: [
+//                         Container(
+//                             margin: const EdgeInsets.only(top: 25),
+//                             child: NeuBox(
+//                                 child: ClipRRect(
+//                                     borderRadius: BorderRadius.circular(15),
+//                                     child: (manager.localAudio != "download")
+//                                         ? Image.network(
+//                                             data[manager.currentTrack].imgUrl,
+//                                             height: 250,
+//                                             width: 250,
+//                                             fit: BoxFit.contain,
+//                                           )
+//                                         : Image.file(
+//                                             File(data[manager.currentTrack]
+//                                                 .imgUrl),
+//                                             height: 250,
+//                                             width: 250,
+//                                             fit: BoxFit.contain,
+//                                           )))),
+//                         SizedBox(
+//                           height: 40.0,
+//                           child: Marquee(
+//                             text: data[manager.currentTrack].name,
+//                             style: const TextStyle(
+//                                 fontSize: 24, color: Colors.amber),
+//                             velocity: 10.0,
+//                             blankSpace: 20.0,
+//                             scrollAxis: Axis.horizontal,
+//                             crossAxisAlignment: CrossAxisAlignment.start,
+//                             pauseAfterRound: const Duration(seconds: 1),
+//                           ),
+//                         ),
+//                         Row(
+//                           children: [
+//                             Container(
+//                               padding: const EdgeInsets.only(left: 40),
+//                               child: IconButton(
+//                                 icon: const Icon(Icons.download),
+//                                 onPressed: () {
+//                                   manager.downLoadFile(
+//                                       data[manager.currentTrack].mp3Url,
+//                                       data[manager.currentTrack].name,
+//                                       data[manager.currentTrack].imgUrl);
+//                                 },
+//                               ),
+//                             ),
+//                             Container(
+//                                 margin: const EdgeInsets.only(left: 91),
+//                                 child: IconButton(
+//                                   onPressed: () async {
+//                                     setState(() {
+//                                       manager.isLike = !manager.isLike;
+//                                     });
+//                                     _firebaseSong.updateToLikes(
+//                                         data[manager.currentTrack].id);
+//                                     _firebaseTracker.updateSongToLikes(
+//                                         data[manager.currentTrack].id);
+//                                   },
+//                                   icon: (manager.isLike)
+//                                       ? const Icon(
+//                                           Icons.favorite,
+//                                           color: Colors.yellow,
+//                                         )
+//                                       : const Icon(
+//                                           Icons.favorite_border,
+//                                           color: Colors.black,
+//                                         ),
+//                                 )),
+//                             ValueListenableBuilder<Duration>(
+//                               valueListenable: manager.positionNotifier,
+//                               builder: (context, position, child) {
+//                                 return Container(
+//                                     margin: const EdgeInsets.only(left: 71),
+//                                     child: Text(
+//                                         "${manager.duration.inSeconds.toDouble() - position.inSeconds.toDouble()}s"));
+//                               },
+//                             ),
+//                           ],
+//                         ),
+//                         ValueListenableBuilder<Duration>(
+//                           valueListenable: manager.positionNotifier,
+//                           builder: (context, position, child) {
+//                             return Slider(
+//                               value: position.inSeconds.toDouble(),
+//                               onChanged: (newValue) {
+//                                 Duration newPosition =
+//                                     Duration(seconds: newValue.toInt());
+//                                 manager.seek(newPosition);
+//                               },
+//                               min: 0,
+//                               max: manager.duration.inSeconds.toDouble(),
+//                             );
+//                           },
+//                         ),
+//                         Row(
+//                           children: [
+//                             Expanded(
+//                               child: IconButton(
+//                                 icon: _setIconLoop(),
+//                                 onPressed: () {
+//                                   setState(() {
+//                                     manager.isLoop = !manager.isLoop;
+//                                     manager.setPlay();
+//                                   });
+//                                 },
+//                               ),
+//                             ),
+//                             Expanded(
+//                                 child: IconButton(
+//                                     onPressed: () {
+//                                       setState(() {
+//                                         if (manager.currentTrack != 0) {
+//                                           manager.currentTrack--;
+//                                           manager.playOrpause(
+//                                               manager.currentTrack);
+//                                           isCalled = false;
+//                                         } else {
+//                                           print("This is the first track");
+//                                         }
+//                                       });
+//                                     },
+//                                     icon: const Icon(
+//                                       Icons.skip_previous,
+//                                       size: 30,
+//                                     ))),
+//                             ValueListenableBuilder<bool>(
+//                               valueListenable: manager.isLoading,
+//                               builder: (context, isLoading, child) {
+//                                 return isLoading
+//                                     ? const CircularProgressIndicator()
+//                                     : Expanded(
+//                                         child: IconButton(
+//                                             onPressed: () async {
+//                                               setState(() {
+//                                                 manager.isPlaying =
+//                                                     !manager.isPlaying;
+//                                               });
+//                                               manager.playOrpause(
+//                                                   manager.currentTrack);
+//                                             },
+//                                             icon: _setIconPlaying()));
+//                               },
+//                             ),
+//                             Expanded(
+//                                 child: IconButton(
+//                                     onPressed: () {
+//                                       setState(() {
+//                                         if (manager.currentTrack !=
+//                                             data.length - 1) {
+//                                           manager.currentTrack++;
+//                                           manager.playOrpause(
+//                                               manager.currentTrack);
+//                                           isCalled = false;
+//                                         } else {
+//                                           print("This is the last track");
+//                                         }
+//                                       });
+//                                     },
+//                                     icon: const Icon(
+//                                       Icons.skip_next,
+//                                       size: 30,
+//                                     ))),
+//                             Expanded(
+//                                 child: IconButton(
+//                                     onPressed: () {
+//                                       setState(() {
+//                                         showSetVolume = !showSetVolume;
+//                                       });
+//                                     },
+//                                     icon: const Icon(Icons.volume_up)))
+//                           ],
+//                         ),
+//                         if (showSetVolume)
+//                           SizedBox(
+//                             width: 200,
+//                             child: Slider(
+//                               value: manager.volume,
+//                               onChanged: (value) {
+//                                 setState(() {
+//                                   manager.volume = value;
+//                                 });
+//                                 manager.setPlay();
+//                               },
+//                               activeColor: Colors.blue,
+//                               inactiveColor: Colors.grey,
+//                             ),
+//                           )
+//                       ],
+//                     );
+//                   } else if (snapshot.hasError) {
+//                     return Text('$snapshot.error');
+//                   } else {
+//                     return const CircularProgressIndicator();
+//                   }
+//                 }) :  FutureBuilder(
+//             future: manager.getDataWithLocation(manager.localAudio),
+//             builder: (context, snapshot) {
+//               if (snapshot.hasData) {
+//                 final List<Track> data = snapshot.data!;
+//                 return Column(
+//                   //mainAxisAlignment: MainAxisAlignment.center,
+//                   children: [
+//                     Container(
+//                         margin: const EdgeInsets.only(top: 25),
+//                         child: NeuBox(
+//                             child: ClipRRect(
+//                                 borderRadius: BorderRadius.circular(15),
+//                                 child: (manager.localAudio != "download")
+//                                     ? Image.network(
+//                                   data[manager.currentTrack].imgUrl,
+//                                   height: 250,
+//                                   width: 250,
+//                                   fit: BoxFit.contain,
+//                                 )
+//                                     : Image.file(
+//                                   File(data[manager.currentTrack]
+//                                       .imgUrl),
+//                                   height: 250,
+//                                   width: 250,
+//                                   fit: BoxFit.contain,
+//                                 )))),
+//                     SizedBox(
+//                       height: 40.0,
+//                       child: Marquee(
+//                         text: data[manager.currentTrack].name,
+//                         style: const TextStyle(
+//                             fontSize: 24, color: Colors.amber),
+//                         velocity: 10.0,
+//                         blankSpace: 20.0,
+//                         scrollAxis: Axis.horizontal,
+//                         crossAxisAlignment: CrossAxisAlignment.start,
+//                         pauseAfterRound: const Duration(seconds: 1),
+//                       ),
+//                     ),
+//                     Row(
+//                       children: [
+//                         Container(
+//                           padding: const EdgeInsets.only(left: 40),
+//                           child: IconButton(
+//                             icon: const Icon(Icons.download),
+//                             onPressed: () {
+//                               manager.downLoadFile(
+//                                   data[manager.currentTrack].mp3Url,
+//                                   data[manager.currentTrack].name,
+//                                   data[manager.currentTrack].imgUrl);
+//                             },
+//                           ),
+//                         ),
+//                         Container(
+//                           margin: const EdgeInsets.only(left: 90),
+//                           child: const Icon(
+//                             Icons.favorite,
+//                             color: Colors.yellow,
+//                           ),
+//                         ),
+//                         ValueListenableBuilder<Duration>(
+//                           valueListenable: manager.positionNotifier,
+//                           builder: (context, position, child) {
+//                             return Container(
+//                                 margin: const EdgeInsets.only(left: 70),
+//                                 child: Text(
+//                                     "${manager.duration.inSeconds.toDouble() - position.inSeconds.toDouble()}s"));
+//                           },
+//                         ),
+//                       ],
+//                     ),
+//                     ValueListenableBuilder<Duration>(
+//                       valueListenable: manager.positionNotifier,
+//                       builder: (context, position, child) {
+//                         return Slider(
+//                           value: position.inSeconds.toDouble(),
+//                           onChanged: (newValue) {
+//                             Duration newPosition =
+//                             Duration(seconds: newValue.toInt());
+//                             manager.seek(newPosition);
+//                           },
+//                           min: 0,
+//                           max: manager.duration.inSeconds.toDouble(),
+//                         );
+//                       },
+//                     ),
+//                     Row(
+//                       children: [
+//                         Expanded(
+//                           child: IconButton(
+//                             icon: _setIconLoop(),
+//                             onPressed: () {
+//                               setState(() {
+//                                 manager.isLoop = !manager.isLoop;
+//                                 manager.setPlay();
+//                               });
+//                             },
+//                           ),
+//                         ),
+//                         Expanded(
+//                             child: IconButton(
+//                                 onPressed: () {
+//                                   setState(() {
+//                                     if (manager.currentTrack != 0) {
+//                                       manager.currentTrack--;
+//                                       manager.playOrpause(
+//                                           manager.currentTrack);
+//                                       isCalled = false;
+//                                     } else {
+//                                       print("This is the first track");
+//                                     }
+//                                   });
+//                                 },
+//                                 icon: const Icon(
+//                                   Icons.skip_previous,
+//                                   size: 30,
+//                                 ))),
+//                         ValueListenableBuilder<bool>(
+//                           valueListenable: manager.isLoading,
+//                           builder: (context, isLoading, child) {
+//                             return isLoading
+//                                 ? const CircularProgressIndicator()
+//                                 : Expanded(
+//                                 child: IconButton(
+//                                     onPressed: () async {
+//                                       setState(() {
+//                                         manager.isPlaying =
+//                                         !manager.isPlaying;
+//                                       });
+//                                       manager.playOrpause(
+//                                           manager.currentTrack);
+//                                     },
+//                                     icon: _setIconPlaying()));
+//                           },
+//                         ),
+//                         Expanded(
+//                             child: IconButton(
+//                                 onPressed: () {
+//                                   setState(() {
+//                                     if (manager.currentTrack !=
+//                                         data.length - 1) {
+//                                       manager.currentTrack++;
+//                                       manager.playOrpause(
+//                                           manager.currentTrack);
+//                                       isCalled = false;
+//                                     } else {
+//                                       print("This is the last track");
+//                                     }
+//                                   });
+//                                 },
+//                                 icon: const Icon(
+//                                   Icons.skip_next,
+//                                   size: 30,
+//                                 ))),
+//                         Expanded(
+//                             child: IconButton(
+//                                 onPressed: () {
+//                                   setState(() {
+//                                     showSetVolume = !showSetVolume;
+//                                   });
+//                                 },
+//                                 icon: const Icon(Icons.volume_up)))
+//                       ],
+//                     ),
+//                     if (showSetVolume)
+//                       SizedBox(
+//                         width: 200,
+//                         child: Slider(
+//                           value: manager.volume,
+//                           onChanged: (value) {
+//                             setState(() {
+//                               manager.volume = value;
+//                             });
+//                             manager.setPlay();
+//                           },
+//                           activeColor: Colors.blue,
+//                           inactiveColor: Colors.grey,
+//                         ),
+//                       )
+//                   ],
+//                 );
+//               } else if (snapshot.hasError) {
+//                 return Text('$snapshot.error');
+//               } else {
+//                 return const CircularProgressIndicator();
+//               }
+//             })
+//       ),
+//     );
+//   }
+//
+//   Icon _setIconPlaying() {
+//     if (manager.isPlaying) {
+//       return const Icon(
+//         Icons.pause,
+//         size: 40,
+//       );
+//     } else {
+//       return const Icon(
+//         Icons.play_arrow,
+//         size: 40,
+//       );
+//     }
+//   }
+//
+//   Icon _setIconLoop() {
+//     if (manager.isLoop) {
+//       return const Icon(Icons.repeat_one_rounded);
+//     } else {
+//       return const Icon(Icons.repeat);
+//     }
+//   }
+// }
+//
+//

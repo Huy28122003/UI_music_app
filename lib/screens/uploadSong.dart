@@ -4,13 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:music/models/Song.dart';
 import 'package:music/models/Tracker.dart';
 import 'package:music/services/firebase_track_service.dart';
 import 'package:music/services/firebase_tracker_service.dart';
 import 'package:music/services/httpv1_send_messaging_service.dart';
+import 'package:provider/provider.dart';
 import 'package:random_string/random_string.dart';
 import '../models/FirebaseTrack.dart';
-import '../services/auto_login_service.dart';
 
 class UploadScreen extends StatefulWidget {
   @override
@@ -201,11 +202,11 @@ class _UploadScreenState extends State<UploadScreen> {
                               "A new interesting song",
                               _trackNameController.text.toString(),
                               docId);
-                          manager.setDataSource("playlist");
-                          await manager.loadData("playlist");
+                          Provider.of<SongProvider>(context, listen: false).setDataSource("playlist");
+                          await Provider.of<SongProvider>(context, listen: false).loadData("playlist");
                           Navigator.pushNamedAndRemoveUntil(
                             context,
-                            '/library',
+                            '/gallery',
                             (Route<dynamic> route) => false,
                           );
                         } catch (e) {

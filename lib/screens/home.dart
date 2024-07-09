@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:music/screens/signIn.dart';
 import 'package:music/services/firebase_authen_service.dart';
 import 'package:music/services/receive_cloud_messaging_service.dart';
-import './gallery.dart';
+import '../rapid_api/gallery.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});

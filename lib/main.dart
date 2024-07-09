@@ -2,20 +2,22 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:just_audio_background/just_audio_background.dart';
-import 'package:music/screens/library.dart';
+import 'package:music/models/Song.dart';
+import 'package:music/screens/gallery.dart';
 import 'package:music/screens/signIn.dart';
 import 'package:music/services/auto_login_service.dart';
 import 'package:music/services/receive_cloud_messaging_service.dart';
+import 'package:provider/provider.dart';
 import 'screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:music/firebase_options.dart';
+
 final navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> _receiveNotification(RemoteMessage remoteMessage) async {
   if (remoteMessage.notification != null) {
-    navigatorKey.currentState!
-        .pushNamed('/library', arguments: remoteMessage);
+    navigatorKey.currentState!.pushNamed('/library', arguments: remoteMessage);
   }
 }
 
@@ -41,7 +43,7 @@ void main() async {
     if (remoteMessage.notification != null) {
       print("Notification is tapped");
       navigatorKey.currentState!
-          .pushNamed('/library', arguments: remoteMessage);
+          .pushNamed('/gallery', arguments: remoteMessage);
     }
   });
 
@@ -56,14 +58,22 @@ void main() async {
     }
   });
 
-  runApp(MaterialApp(
-    navigatorKey: navigatorKey,
-    theme: ThemeData(brightness: Brightness.light),
-    home: const AutoLogin(),
-    routes: {
-      '/home': (context) => const Home(),
-      '/library': (context) => const Library(),
-      '/signIn': (context) => const SignIn()
-    },
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(
+        create: (_) => SongProvider(),
+      )
+
+    ],
+    child: MaterialApp(
+      navigatorKey: navigatorKey,
+      theme: ThemeData(brightness: Brightness.light),
+      home: const Gallery(),
+      routes: {
+        '/home': (context) => const Home(),
+        '/gallery': (context) => const Gallery(),
+        '/signIn': (context) => const SignIn()
+      },
+    ),
   ));
 }

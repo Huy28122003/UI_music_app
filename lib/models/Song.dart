@@ -1,40 +1,43 @@
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:music/models/Default.dart';
-import 'package:music/models/FirebaseTrack.dart';
 import 'package:music/models/ISongDataSource.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter/material.dart';
+import 'FirebaseTrack.dart';
 
-class SongManager extends ChangeNotifier{
+class SongProvider extends ChangeNotifier {
   late SongDataSource _songDataSource;
 
   late List<Song> _playlists = [];
   late List<Song> _favorite = [];
   late List<Song> _downloads = [];
   late List<Song> _hot = [];
+  late List<Song> _recent = [];
+
+  int _currentSong = -2;
+  int _saveSong = -1;
+  String _saveLocal = "";
+  late String _currentLocal;
+
+
+  bool _isVolume =false;
+  bool _isLoop = false;
+  bool _isLike = false;
 
   late AudioPlayer _audioPlayer;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   Duration _bufferedPosition = Duration.zero;
-  String _currentLocal = "";
 
-  late int _currentSong;
-  late String _localSong;
-  int _numberSong = -1;
-  late String _playState;
-  late bool _isSelected = false;
-  late bool _isLike = false;
-
-  SongManager() {
+  SongProvider() {
     _audioPlayer = AudioPlayer();
-
+    registerListeners();
     _songDataSource = SongDataSourceFactory.create('playlist');
     loadData("playlist");
 
@@ -46,22 +49,16 @@ class SongManager extends ChangeNotifier{
 
     _songDataSource = SongDataSourceFactory.create('download');
     loadData("download");
-    notifyListeners();
   }
-
   void dispose() {
     _audioPlayer.dispose();
     _favorite.clear();
     _position = Duration.zero;
     _bufferedPosition = Duration.zero;
     _duration = Duration.zero;
-    _isSelected = false;
     _currentSong = -2;
-    _currentLocal = "";
-  }
-
-  void setDataSource(String value) {
-    _songDataSource = SongDataSourceFactory.create(value);
+    _saveSong = -1;
+    _saveLocal = "";
   }
 
   Future<void> loadData(String position) async {
@@ -81,65 +78,63 @@ class SongManager extends ChangeNotifier{
     }
   }
 
-  List<Song> get hot => _hot;
-
-  set hot(List<Song> value) {
-    _hot = value;
+  void setDataSource(String value) {
+    _songDataSource = SongDataSourceFactory.create(value);
   }
 
-  List<Song> get favorite => _favorite;
+  bool get isLike => _isLike;
 
-  List<Song> get playlists => _playlists;
-
-  String get currentLocal => _currentLocal;
-
-  set currentLocal(String value) {
-    _currentLocal = value;
+  set isLike(bool value) {
+    _isLike = value;
+    notifyListeners();
   }
 
-  String get localSong => _localSong;
+  bool get isLoop => _isLoop;
 
-  set localSong(String value) {
-    _localSong = value;
+  set isLoop(bool value) {
+    _isLoop = value;
+    notifyListeners();
   }
 
-  int get currentSong => _currentSong;
+  bool get isVolume => _isVolume;
 
-  set currentSong(int value) {
-    _currentSong = value;
+  set isVolume(bool value) {
+    _isVolume = value;
+    notifyListeners();
   }
 
-  String get playState => _playState;
+  List<Song> get recent => _recent;
 
-  set playState(String value) {
-    _playState = value;
-  }
-
-  Duration get duration => _duration;
-
-  set duration(Duration value) {
-    _duration = value;
-  }
-
-  Duration get position => _position;
-
-  set position(Duration value) {
-    _position = value;
+  set recent(List<Song> value) {
+    _recent = value;
   }
 
   Duration get bufferedPosition => _bufferedPosition;
 
   set bufferedPosition(Duration value) {
     _bufferedPosition = value;
+    notifyListeners();
   }
 
-  int get numberSong => _numberSong;
+  Duration get position => _position;
 
-  set numberSong(int value) {
-    _numberSong = value;
+  set position(Duration value) {
+    _position = value;
+    notifyListeners();
   }
 
-  AudioPlayer get audioPlayer => _audioPlayer;
+  Duration get duration => _duration;
+
+  set duration(Duration value) {
+    _duration = value;
+    notifyListeners();
+  }
+
+  List<Song> get hot => _hot;
+
+  set hot(List<Song> value) {
+    _hot = value;
+  }
 
   List<Song> get downloads => _downloads;
 
@@ -147,69 +142,100 @@ class SongManager extends ChangeNotifier{
     _downloads = value;
   }
 
-  bool get isLike => _isLike;
-
-  set isLike(bool value) {
-    _isLike = value;
-  }
-
-  bool get isSelected => _isSelected;
-
-  set isSelected(bool value) {
-    _isSelected = value;
-  }
+  List<Song> get favorite => _favorite;
 
   set favorite(List<Song> value) {
     _favorite = value;
   }
 
+  List<Song> get playlists => _playlists;
+
   set playlists(List<Song> value) {
     _playlists = value;
   }
 
-  List<Song>? getDataWithPosition() {
-    if (localSong == "hot") {
-      return _hot;
-    } else if (localSong == "favorite") {
-      return _favorite;
-    } else if (localSong == "download") {
-      return _downloads;
-    } else if (localSong == "playlist") {
-      return _playlists;
+  String get currentLocal => _currentLocal;
+
+  set currentLocal(String value) {
+    _currentLocal = value;
+  }
+
+  int get currentSong => _currentSong;
+
+  set currentSong(int value) {
+    _currentSong = value;
+    notifyListeners();
+  }
+
+  AudioPlayer get audioPlayer => _audioPlayer;
+
+  set audioPlayer(AudioPlayer value) {
+    _audioPlayer = value;
+  }
+
+  void getDataWithPosition() {
+    if (currentLocal == "hot") {
+      _recent = _hot;
+    } else if (currentLocal == "favorite") {
+      _recent = _favorite;
+    } else if (currentLocal == "download") {
+      _recent = _downloads;
+    } else if (currentLocal == "playlist") {
+      _recent = _playlists;
     } else {
-      return null;
+      _recent = [];
     }
   }
 
   Future<void> prepare() async {
-    if (localSong != currentLocal) {
-      _audioPlayer.dispose();
-
-      if (currentLocal != "") {
-        numberSong = -1;
+    if (currentLocal != _saveLocal) {
+      if (_saveLocal != "") {
+        _saveSong = -1;
         position = Duration.zero;
         duration = Duration.zero;
         bufferedPosition = Duration.zero;
       }
-      _audioPlayer = AudioPlayer();
-      if (localSong == "playlist") {
-        await _audioPlayer.setAudioSource(await createPlaylist(playlists));
-      } else if (localSong == "favorite") {
-        await _audioPlayer.setAudioSource(await createPlaylist(favorite));
-      } else if (localSong == "download") {
-        await _audioPlayer.setAudioSource(await createPlaylist(downloads));
-      } else if (localSong == "hot") {
-        await _audioPlayer.setAudioSource(await createPlaylist(hot));
-      }
-      currentLocal = localSong;
+      recent.clear();
+      getDataWithPosition();
+      await _audioPlayer.setAudioSource(await createPlaylist(_recent));
+      _saveLocal = currentLocal;
     }
-    if (currentSong != numberSong) {
+    if (currentSong != _saveSong) {
       _position = Duration.zero;
       _bufferedPosition = Duration.zero;
       _duration = Duration.zero;
-      audioPlayer.seek(Duration.zero, index: currentSong);
-      numberSong = currentSong;
+      _audioPlayer.seek(Duration.zero, index: currentSong);
+      _saveSong = currentSong;
     }
+  }
+
+  Future<void> play() async {
+    await _audioPlayer.play();
+    notifyListeners();
+  }
+
+  Future<void> pause()async{
+    await _audioPlayer.pause();
+    notifyListeners();
+  }
+
+  void registerListeners() {
+    _audioPlayer.durationStream.listen((newduration) {
+      duration = newduration ?? Duration.zero;
+      notifyListeners();
+    });
+    _audioPlayer.positionStream.listen((newposition) {
+      position = newposition;
+      notifyListeners();
+    });
+    _audioPlayer.bufferedPositionStream.listen((newbufferedPosition) {
+      bufferedPosition = newbufferedPosition;
+      notifyListeners();
+    });
+    _audioPlayer.sequenceStateStream.listen((sequenceState) {
+      currentSong = sequenceState!.currentIndex;
+      notifyListeners();
+    });
   }
 
   Future<ConcatenatingAudioSource> createPlaylist(List<Song> songs) async {

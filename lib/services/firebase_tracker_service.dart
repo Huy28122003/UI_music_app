@@ -37,13 +37,10 @@ class FirebaseTracker {
     });
   }
 
-  Future<void> updateSongToLikes(String songID) async {
+  Future<void> updateSongToLikes(String songID,bool likeOrDislike) async {
     String userID = FirebaseAuth.instance.currentUser!.uid;
-    print(songID);
-    print(userID);
-    print(manager.isLike);
     try {
-      if (manager.isLike) {
+      if (likeOrDislike) {
         _firestore.collection("users").doc(userID).update({
           'likes': FieldValue.arrayUnion([songID])
         });

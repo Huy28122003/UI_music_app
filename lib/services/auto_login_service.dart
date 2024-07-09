@@ -1,8 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:music/models/Song.dart';
 import 'package:music/models/SongManager.dart';
-
-SongManager manager = SongManager();
 
 class AutoLogin extends StatefulWidget {
   const AutoLogin({super.key});
@@ -20,7 +19,7 @@ class _AutoLoginState extends State<AutoLogin> {
 
   Future<void> _checkAndLogin() async {
     if (await _checkLoginStatus()) {
-        Navigator.pushReplacementNamed(context, '/library');
+        Navigator.pushReplacementNamed(context, '/gallery');
     } else {
       Navigator.pushReplacementNamed(context, '/home');
     }

@@ -1,11 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:music/models/SongManager.dart';
+import 'package:music/models/Song.dart';
 import 'package:music/screens/signUp.dart';
 import 'package:music/services/auto_login_service.dart';
 import 'package:music/services/firebase_authen_service.dart';
 import 'package:music/services/receive_cloud_messaging_service.dart';
 import 'package:music/services/firebase_tracker_service.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SignIn extends StatefulWidget {
@@ -208,8 +209,8 @@ class _SignUpState extends State<SignIn> {
     User? user = await _authenService.signInWithEmailAndPassword(
         context, email, password);
     if (user != null) {
-      manager.setDataSource("favorite");
-      manager.loadData("favorite");
+      Provider.of<SongProvider>(context, listen: false).setDataSource("favorite");
+      await Provider.of<SongProvider>(context, listen: false).loadData("favorite");
       bool isSave = false;
       for (var i in keys) {
         if (i.keys.toString() == "(${_emailController.text.toString()})") {
@@ -222,7 +223,7 @@ class _SignUpState extends State<SignIn> {
       } else {
         Navigator.pushNamedAndRemoveUntil(
           context,
-          '/library',
+          '/gallery',
           (Route<dynamic> route) => false,
         );
       }
@@ -244,7 +245,7 @@ class _SignUpState extends State<SignIn> {
                 Navigator.of(context).pop();
                 Navigator.pushNamedAndRemoveUntil(
                   context,
-                  '/library',
+                  '/galerry',
                   (Route<dynamic> route) => false,
                 );
               },
@@ -257,7 +258,7 @@ class _SignUpState extends State<SignIn> {
                 Navigator.of(context).pop();
                 Navigator.pushNamedAndRemoveUntil(
                   context,
-                  '/library',
+                  '/gallery',
                   (Route<dynamic> route) => false,
                 );
               },

@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:music/models/Song.dart';
+import 'package:music/screens/player.dart';
 import 'package:music/services/firebase_track_service.dart';
 import 'package:music/widgets/verticalList.dart';
+import 'package:provider/provider.dart';
 import '../screens/profile.dart';
-import '../screens/run.dart';
 import '../screens/search.dart';
-import '../services/auto_login_service.dart';
 
 class BottomBar extends StatefulWidget {
   const BottomBar({super.key});
@@ -19,75 +20,66 @@ class _BottomBarState extends State<BottomBar> {
   FirebaseSong _firebaseSong = FirebaseSong();
 
   @override
-  void initState() {
-    super.initState();
-    Timer.periodic(Duration(seconds: 1), (timer) {
-      if (manager.audioPlayer.playing) {
-        if (mounted) {
-          setState(() {});
-        }
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (manager.isSelected == true && manager.isSelected != null)
-          Container(
-            padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                        child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const Run()));
-                      },
-                      child: Text(
-                          "${manager.audioPlayer.sequenceState?.currentSource?.tag.title}"),
-                    )),
-                    StreamBuilder<PlayerState>(
-                      stream: manager.audioPlayer.playerStateStream,
-                      builder: (context, snapshot) {
-                        final playerState = snapshot.data;
-                        final processingState = playerState?.processingState;
-                        if (processingState == ProcessingState.loading ||
-                            processingState == ProcessingState.buffering) {
-                          return const CircularProgressIndicator();
-                        } else {
-                          return IconButton(
-                            onPressed: () {
-                              setState(() {
+        Consumer<SongProvider>(builder: (context, manager, child) {
+          if (manager.currentSong != -2) {
+            return Container(
+              padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                          child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const Player()));
+                        },
+                        child: Text(
+                            "${manager.audioPlayer.sequenceState?.currentSource?.tag.title}"),
+                      )),
+                      StreamBuilder<PlayerState>(
+                        stream: manager.audioPlayer.playerStateStream,
+                        builder: (context, snapshot) {
+                          final playerState = snapshot.data;
+                          final processingState = playerState?.processingState;
+                          if (processingState == ProcessingState.loading ||
+                              processingState == ProcessingState.buffering) {
+                            return const CircularProgressIndicator();
+                          } else {
+                            return IconButton(
+                              onPressed: () {
                                 if (manager.audioPlayer.playing) {
-                                  manager.audioPlayer.pause();
+                                  manager.pause();
                                 } else {
-                                  manager.audioPlayer.play();
+                                  manager.play();
                                 }
-                              });
-                            },
-                            icon: _setIconPlaying(),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                LinearProgressIndicator(
-                  value: (manager.duration != Duration.zero)
-                      ? manager.position.inSeconds.toDouble() /
-                          manager.duration.inSeconds.toDouble()
-                      : 0.0,
-                ),
-              ],
-            ),
-          ),
+                              },
+                              icon: _setIconPlaying(manager),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  LinearProgressIndicator(
+                    value: (manager.duration != Duration.zero)
+                        ? manager.position.inSeconds.toDouble() /
+                            manager.duration.inSeconds.toDouble()
+                        : 0.0,
+                  ),
+                ],
+              ),
+            );
+          }else{
+            return const SizedBox.shrink();
+          }
+        }),
         BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           items: const <BottomNavigationBarItem>[
@@ -109,20 +101,20 @@ class _BottomBarState extends State<BottomBar> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
-              label: 'User',
+              label: 'More',
             ),
           ],
           onTap: (index) async {
             switch (index) {
               case 0:
-                // manager.dataFavorite = manager.getFavoriteList();
-                // manager.favorite = await manager.dataFavorite;
+                Provider.of<SongProvider>(context, listen: false).setDataSource("favorite");
+                await Provider.of<SongProvider>(context, listen: false).loadData("favorite");
                 Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => VerticalList(
                             name: "Favorites",
-                            data: manager.favorite,
+                            data:  Provider.of<SongProvider>(context, listen: false).favorite,
                             location: "favorite")));
                 break;
               case 1:
@@ -130,21 +122,23 @@ class _BottomBarState extends State<BottomBar> {
                     MaterialPageRoute(builder: (context) => const Search()));
                 break;
               case 2:
-                manager.setDataSource("playlist");
-                await manager.loadData("playlist");
+                Provider.of<SongProvider>(context, listen: false).setDataSource("playlist");
+                await Provider.of<SongProvider>(context, listen: false).loadData("playlist");
                 Navigator.pushNamedAndRemoveUntil(
                   context,
-                  '/library',
+                  '/gallery',
                   (Route<dynamic> route) => false,
                 );
                 break;
               case 3:
+                Provider.of<SongProvider>(context, listen: false).setDataSource("download");
+                await Provider.of<SongProvider>(context, listen: false).loadData("download");
                 Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => VerticalList(
                             name: "Download",
-                            data: manager.downloads,
+                            data:  Provider.of<SongProvider>(context, listen: false).downloads,
                             location: "download")));
                 break;
               case 4:
@@ -158,7 +152,7 @@ class _BottomBarState extends State<BottomBar> {
     );
   }
 
-  Icon _setIconPlaying() {
+  Icon _setIconPlaying(SongProvider manager) {
     if (manager.audioPlayer.playing) {
       return const Icon(
         Icons.pause,

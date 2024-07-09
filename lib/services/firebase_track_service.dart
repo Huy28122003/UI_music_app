@@ -35,7 +35,7 @@ class FirebaseSong {
     return songs;
   }
 
-  Future<void> updateToLikes(String songID) async {
+  Future<void> updateToLikes(String songID,bool likeOrDislike) async {
     try {
       final documentReference = FirebaseFirestore.instance.collection('playlists').doc(songID);
 
@@ -43,7 +43,7 @@ class FirebaseSong {
         DocumentSnapshot snapshot = await transaction.get(documentReference);
         int currentLikes = snapshot.get('likes') ?? 0;
         int newLikes;
-        if(manager.isLike){
+        if(likeOrDislike){
           newLikes = currentLikes + 1;
         }
         else{

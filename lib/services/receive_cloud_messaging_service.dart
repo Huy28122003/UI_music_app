@@ -45,10 +45,8 @@ class MessagingService {
   }
 
   static Future<void> onNotificationTap(NotificationResponse notificationResponse) async {
-    manager.setDataSource("playlist");
-    manager.loadData("playlist");
     navigatorKey.currentState!
-        .pushNamed('/library', arguments: notificationResponse);
+        .pushNamed('/gallery', arguments: notificationResponse);
   }
 
   static Future showSimpleNotification({

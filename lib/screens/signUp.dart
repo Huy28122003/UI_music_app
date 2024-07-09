@@ -1,11 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:music/screens/gallery.dart';
-import 'package:music/screens/library.dart';
 import 'package:music/screens/signIn.dart';
 import 'package:music/services/firebase_authen_service.dart';
 import 'package:music/services/firebase_tracker_service.dart';
-
 import '../models/Tracker.dart';
 
 class SignUp extends StatefulWidget {
@@ -138,7 +135,7 @@ class _SignUpState extends State<SignUp> {
     if (user != null) {
       Navigator.pushNamedAndRemoveUntil(
         context,
-        '/library',
+        '/player',
             (Route<dynamic> route) => false,
       );
     } else {
