@@ -174,17 +174,30 @@ class _RunState extends State<Player> {
                           size: 40,
                         ),
                       ),
-                      IconButton(
-                        onPressed: () async {
-                          if (manager.audioPlayer.playing) {
-                            manager.pause();
-                          } else {
-                            manager.play();
-                          }
-                        },
-                        icon: _setIconPlaying(manager),
-                        iconSize: 40,
-                      ),
+                      StreamBuilder<PlayerState>(
+                          stream: manager.audioPlayer.playerStateStream,
+                          builder: (context, snapshot) {
+                            final playerState = snapshot.data;
+                            final processingState =
+                                playerState?.processingState;
+                            if (processingState == ProcessingState.loading ||
+                                processingState == ProcessingState.buffering) {
+                              return const CircularProgressIndicator();
+                            } else {
+                              return IconButton(
+                                onPressed: () {
+                                  if (manager.audioPlayer.playing) {
+                                    manager.pause();
+                                  } else {
+                                    manager.play();
+                                  }
+                                },
+                                icon: _setIconPlaying(manager),
+                              );
+                            }
+                          },
+                        ),
+
                       IconButton(
                         onPressed: () {
                           manager.audioPlayer.seekToNext();

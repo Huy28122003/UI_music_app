@@ -94,12 +94,12 @@ class _SearchState extends State<Search> {
                                   onTap: () async {
                                     manager.currentSong =
                                         manager.getPositionInList(data[i].name);
-                                    manager.currentLocal = "playlists";
+                                    manager.currentLocal = "playlist";
                                     await manager.prepare();
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => Player()),
+                                          builder: (context) => const Player()),
                                     );
                                   },
                                 )

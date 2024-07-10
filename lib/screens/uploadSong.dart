@@ -204,12 +204,15 @@ class _UploadScreenState extends State<UploadScreen> {
                               docId);
                           Provider.of<SongProvider>(context, listen: false).setDataSource("playlist");
                           await Provider.of<SongProvider>(context, listen: false).loadData("playlist");
+                          Provider.of<SongProvider>(context, listen: false).getDataWithPosition();
+
                           Navigator.pushNamedAndRemoveUntil(
                             context,
                             '/gallery',
                             (Route<dynamic> route) => false,
                           );
                         } catch (e) {
+                          print(e);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                                 content:

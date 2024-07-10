@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music/models/Song.dart';
@@ -25,7 +24,8 @@ class _BottomBarState extends State<BottomBar> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Consumer<SongProvider>(builder: (context, manager, child) {
-          if (manager.currentSong != -2) {
+          if (manager.currentSong != -2 &&
+              manager.audioPlayer.position > const Duration(seconds: 0)) {
             return Container(
               padding: const EdgeInsets.only(left: 8.0, right: 8.0),
               child: Column(
@@ -33,16 +33,17 @@ class _BottomBarState extends State<BottomBar> {
                   Row(
                     children: [
                       Expanded(
-                          child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const Player()));
-                        },
-                        child: Text(
-                            "${manager.audioPlayer.sequenceState?.currentSource?.tag.title}"),
-                      )),
+                        child: GestureDetector(
+                          child: Text(
+                              "${manager.audioPlayer.sequenceState?.currentSource?.tag.title}"),
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const Player()));
+                          },
+                        ),
+                      ),
                       StreamBuilder<PlayerState>(
                         stream: manager.audioPlayer.playerStateStream,
                         builder: (context, snapshot) {
@@ -76,7 +77,7 @@ class _BottomBarState extends State<BottomBar> {
                 ],
               ),
             );
-          }else{
+          } else {
             return const SizedBox.shrink();
           }
         }),
@@ -107,14 +108,18 @@ class _BottomBarState extends State<BottomBar> {
           onTap: (index) async {
             switch (index) {
               case 0:
-                Provider.of<SongProvider>(context, listen: false).setDataSource("favorite");
-                await Provider.of<SongProvider>(context, listen: false).loadData("favorite");
+                Provider.of<SongProvider>(context, listen: false)
+                    .setDataSource("favorite");
+                await Provider.of<SongProvider>(context, listen: false)
+                    .loadData("favorite");
                 Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => VerticalList(
                             name: "Favorites",
-                            data:  Provider.of<SongProvider>(context, listen: false).favorite,
+                            data: Provider.of<SongProvider>(context,
+                                    listen: false)
+                                .favorite,
                             location: "favorite")));
                 break;
               case 1:
@@ -122,8 +127,10 @@ class _BottomBarState extends State<BottomBar> {
                     MaterialPageRoute(builder: (context) => const Search()));
                 break;
               case 2:
-                Provider.of<SongProvider>(context, listen: false).setDataSource("playlist");
-                await Provider.of<SongProvider>(context, listen: false).loadData("playlist");
+                Provider.of<SongProvider>(context, listen: false)
+                    .setDataSource("playlist");
+                await Provider.of<SongProvider>(context, listen: false)
+                    .loadData("playlist");
                 Navigator.pushNamedAndRemoveUntil(
                   context,
                   '/gallery',
@@ -131,14 +138,18 @@ class _BottomBarState extends State<BottomBar> {
                 );
                 break;
               case 3:
-                Provider.of<SongProvider>(context, listen: false).setDataSource("download");
-                await Provider.of<SongProvider>(context, listen: false).loadData("download");
+                Provider.of<SongProvider>(context, listen: false)
+                    .setDataSource("download");
+                await Provider.of<SongProvider>(context, listen: false)
+                    .loadData("download");
                 Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => VerticalList(
                             name: "Download",
-                            data:  Provider.of<SongProvider>(context, listen: false).downloads,
+                            data: Provider.of<SongProvider>(context,
+                                    listen: false)
+                                .downloads,
                             location: "download")));
                 break;
               case 4:
@@ -156,12 +167,12 @@ class _BottomBarState extends State<BottomBar> {
     if (manager.audioPlayer.playing) {
       return const Icon(
         Icons.pause,
-        size: 40,
+        size: 30,
       );
     } else {
       return const Icon(
         Icons.play_arrow,
-        size: 40,
+        size: 30,
       );
     }
   }

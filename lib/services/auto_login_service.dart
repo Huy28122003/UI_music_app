@@ -27,8 +27,6 @@ class _AutoLoginState extends State<AutoLogin> {
 
   Future<bool> _checkLoginStatus() async {
     User? user = FirebaseAuth.instance.currentUser;
-    print(user?.uid);
-
     if (user != null) {
       return true;
     } else {

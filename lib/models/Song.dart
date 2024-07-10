@@ -51,8 +51,8 @@ class SongProvider extends ChangeNotifier {
     loadData("download");
   }
   void dispose() {
-    _audioPlayer.dispose();
-    _favorite.clear();
+    // _audioPlayer.dispose();
+    // _favorite.clear();
     _position = Duration.zero;
     _bufferedPosition = Duration.zero;
     _duration = Duration.zero;
@@ -76,6 +76,7 @@ class SongProvider extends ChangeNotifier {
         _downloads = await _songDataSource.getSong();
         break;
     }
+    notifyListeners();
   }
 
   void setDataSource(String value) {
@@ -188,23 +189,27 @@ class SongProvider extends ChangeNotifier {
   }
 
   Future<void> prepare() async {
+    int cacheCurrent = currentSong;
     if (currentLocal != _saveLocal) {
-      if (_saveLocal != "") {
+      if (_saveLocal != "") { // khong phai lan dau tien chon bai khi mo app
+        _audioPlayer.dispose();
         _saveSong = -1;
         position = Duration.zero;
         duration = Duration.zero;
         bufferedPosition = Duration.zero;
+        _audioPlayer = AudioPlayer();
+        registerListeners();
       }
       recent.clear();
       getDataWithPosition();
       await _audioPlayer.setAudioSource(await createPlaylist(_recent));
       _saveLocal = currentLocal;
     }
-    if (currentSong != _saveSong) {
+    if (cacheCurrent != _saveSong) {
       _position = Duration.zero;
       _bufferedPosition = Duration.zero;
       _duration = Duration.zero;
-      _audioPlayer.seek(Duration.zero, index: currentSong);
+      _audioPlayer.seek(Duration.zero, index: cacheCurrent);
       _saveSong = currentSong;
     }
   }
